@@ -1,0 +1,41 @@
+name: Test sofa-setup-action
+
+on:
+  workflow_dispatch:
+  push:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+jobs:
+  run:
+    name: Run on ${{ matrix.os }} with SOFA ${{ matrix.sofa_branch }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, macos-13, windows-2022]
+        sofa_branch: [master, v23.06]
+
+    steps:
+      - name: Setup SOFA and environment
+        id: sofa
+        uses: sofa-framework/sofa-setup-action@v4
+        with:
+          sofa_root: ${{ github.workspace }}/sofa
+          sofa_version: ${{ matrix.sofa_branch }}
+          sofa_scope: 'standard'
+
+      - name: Launch test
+        id: sofa
+        uses: sofa-framework/sofa-test-action@master
+        with:
+          sofa_root: ${{ github.workspace }}/sofa
+          scenes_path: ${{ github.workspace }}/sofa/example
+          regression_file_path: ${{ github.workspace }}/sofa/example
+          regression_reference_path: ${{ github.workspace }}/sofa/applications/projects/Regression/references/examples
+
+
+      - name: Print sofa-test-action outputs
+        shell: bash
+        run: |
+          echo TODO

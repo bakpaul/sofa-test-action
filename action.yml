@@ -1,0 +1,37 @@
+# Action description and parameters
+name: 'SOFA Setup Action'
+description: 'Setup everything needed to build a SOFA plugin'
+inputs:
+  sofa_root:
+    description: 'SOFA install directory'
+    required: true
+  scenes_path:
+    description: 'Scene test directory'
+    required: true
+  regression_file_path:
+    description: 'Regression test configuration file directory'
+    required: true
+  regression_reference_path:
+    description: 'Regression test reference directory'
+    required: true
+outputs:
+  scene_test_results:
+    description: "Log file containing scene tests results"
+    value: ${{ steps.set-env-vars.outputs.scene_test_results_path }}
+  regression_test_results:
+    description: "Log file containing regression tests results"
+    value: ${{ steps.set-env-vars.outputs.regression_test_results_path }}
+
+# Action code
+runs:
+  using: "composite"
+  steps:
+    - name: Launch scene tests
+      shell: bash
+      run: |
+        echo TODO
+    - name: Launch regression tests
+      shell: bash
+      run: |
+        echo TODO
+
