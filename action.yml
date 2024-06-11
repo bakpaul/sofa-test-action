@@ -5,16 +5,10 @@ inputs:
   sofa_install_path:
     description: 'Sofa install directory'
     required: true
-  scenes_path:
-    description: 'Scene test directory'
-    required: true
   regression_file_path:
     description: 'Regression test configuration file directory'
     required: true
 outputs:
-  scene_test_results:
-    description: "Log file containing scene tests results"
-    value: ${{ steps.set-env-vars.outputs.scene_test_results_path }}
   regression_test_results:
     description: "Log file containing regression tests results"
     value: ${{ steps.set-env-vars.outputs.regression_test_results_path }}
@@ -23,23 +17,6 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Fetch CI repository
-      shell: bash
-      run: |  
-     
-
-    - name: Run scenes tests
-      shell: bash
-      run: |
-        source scene-tests.sh
-        initialize-scene-tests $output_dir $scenes_path
-        test-all-scenes "$output_dir/all-tested-scenes.txt" $output_dir
-        print-summary $output_dir
-        //TODO check si il y a eu des erreurs et dans ce cas return 1 sinon 0
-
-
-
-
     - name: Fetch and install Regression_test
       shell: bash
       run: |
