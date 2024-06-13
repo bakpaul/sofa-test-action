@@ -27,7 +27,7 @@ jobs:
 
       - name: Launch test
         id: tests
-        uses: bakpaul/sofa-test-action@sofa-test-action
+        uses: bakpaul/sofa-test-action@only_add_regression
         with:
           sofa_root: ${{ github.workspace }}/sofa
           regression_file_path: ${{ github.workspace }}/sofa/example
