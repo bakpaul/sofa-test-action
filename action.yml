@@ -5,6 +5,9 @@ inputs:
   sofa_install_path:
     description: 'Sofa install directory'
     required: true
+  sofa_version:
+    description: 'Sofa installed version'
+    required: true
   regression_file_path:
     description: 'Regression test configuration file directory'
     required: true
@@ -17,22 +20,31 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - name: Setup env
+      shell: bash
+      run: |
+        # Set executable extension
+        EXE=''
+        if [[ "$RUNNER_OS" == "Windows" ]]; then
+          EXE='.exe'
+        fi
+        echo "EXE=$EXE" | tee -a $GITHUB_ENV
+
     - name: Fetch and install Regression_test
       shell: bash
       run: |
         if [[ "$RUNNER_OS" != "macOS" ]]; then
           # Get regression from github releases
           mkdir -p "${{ runner.temp }}/regression_tmp/install"
-          curl --output "${{ runner.temp }}/regression_tmp/${RUNNER_OS}.zip" -L https://github.com/sofa-framework/regression/releases/download/release-master/Regression_test_master_for-SOFA-${{ steps.sofa.outputs.sofa_version }}_${RUNNER_OS}.zip
+          curl --output "${{ runner.temp }}/regression_tmp/${RUNNER_OS}.zip" -L https://github.com/sofa-framework/regression/releases/download/release-master/Regression_test_master_for-SOFA-${{ inputs.sofa_version }}_$RUNNER_OS.zip
           unzip -qq "${{ runner.temp }}/regression_tmp/${RUNNER_OS}.zip" -d "${{ runner.temp }}/regression_tmp/install"
           # Install it in the SOFA bin directory
           $SUDO mv "${{ runner.temp }}"/regression_tmp/install/Regression_*/bin/* "${SOFA_ROOT}/bin"
-          chmod +x ${SOFA_ROOT}/bin/Regression_test${{ steps.sofa.outputs.exe }}
-          # Setup mandatory env vars
+          chmod +x ${SOFA_ROOT}/bin/Regression_test${{ env.EXE }}
           export REGRESSION_SCENES_DIR="${WORKSPACE_SRC_PATH}/examples"
           export REGRESSION_REFERENCES_DIR="${WORKSPACE_SRC_PATH}/regression/references"
           # Run regression test bench
-          ${SOFA_ROOT}/bin/Regression_test${{ steps.sofa.outputs.exe }}
+          ${SOFA_ROOT}/bin/Regression_test${{ env.EXE }}
         else
           echo "Regression tests are not supported on the CI for macOS yet (TODO)"
         fi
