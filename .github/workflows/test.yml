@@ -13,13 +13,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, macos-13, windows-2022]
+        os: [ubuntu-22.04]
         sofa_branch: [master]
 
     steps:
+      - name: checkout
+        uses: actions/checkout@v3
+
       - name: Setup SOFA and environment
         id: sofa
-        uses: sofa-framework/sofa-setup-action@v4
+        uses: ./sac
         with:
           sofa_root: ${{ github.workspace }}/sofa
           sofa_version: ${{ matrix.sofa_branch }}
@@ -27,7 +30,7 @@ jobs:
 
       - name: Launch test
         id: tests
-        uses: bakpaul/sofa-test-action@only_add_regression
+        uses: ./actionTest
         with:
           sofa_install_path: ${{ github.workspace }}/sofa
           regression_file_path: ${{ github.workspace }}/sofa/example
