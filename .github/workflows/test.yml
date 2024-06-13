@@ -32,4 +32,6 @@ jobs:
           sofa_root: ${{ github.workspace }}/sofa
           regression_file_path: ${{ github.workspace }}/sofa/example
           regression_reference_path: ${{ github.workspace }}/sofa/applications/projects/Regression/references/examples
+          sofa_version: ${{ matrix.sofa_branch }}
+
 
