@@ -17,12 +17,9 @@ jobs:
         sofa_branch: [master]
 
     steps:
-      - name: checkout
-        uses: actions/checkout@v3
-
       - name: Setup SOFA and environment
         id: sofa
-        uses: ./sac
+        uses: sofa-framework/sofa-setup-action@v4
         with:
           sofa_root: ${{ github.workspace }}/sofa
           sofa_version: ${{ matrix.sofa_branch }}
@@ -30,7 +27,7 @@ jobs:
 
       - name: Launch test
         id: tests
-        uses: ./actionTest
+        uses: bakpaul/sofa-test-action@only_add_regression
         with:
           sofa_install_path: ${{ github.workspace }}/sofa
           regression_file_path: ${{ github.workspace }}/sofa/example
