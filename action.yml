@@ -5,6 +5,9 @@ inputs:
   sofa_install_path:
     description: 'Sofa install directory'
     required: true
+  local_artifact_path :
+    description: 'path to the install directory of the current plugin'
+    required: false
   sofa_version:
     description: 'Sofa installed version'
     required: true
@@ -24,11 +27,32 @@ runs:
       shell: bash
       run: |
         # Set executable extension
-        EXE=''
+        EXE=''      
         if [[ "$RUNNER_OS" == "Windows" ]]; then
           EXE='.exe'
         fi
         echo "EXE=$EXE" | tee -a $GITHUB_ENV
+        
+        if [[ "$RUNNER_OS" == "Windows" ]]; then
+          if [[ -z "${{ github.event.inputs.local_artifact_path }}" ]]; then
+            echo "${{ inputs.local_artifact_path }}/lib" >> $GITHUB_PATH
+            echo "${{ inputs.local_artifact_path }}/bin" >> $GITHUB_PATH
+            echo "SOFA_PLUGIN_PATH=${{ inputs.local_artifact_path }}/bin" | tee -a $GITHUB_ENV
+
+          fi
+          echo "$SOFA_ROOT/plugins/SofaPython3/bin" >> $GITHUB_PATH
+        else
+          if [[ -z "${{ github.event.inputs.local_artifact_path }}" ]]; then
+            echo "SOFA_PLUGIN_PATH=${{ inputs.local_artifact_path }}/lib" | tee -a $GITHUB_ENV
+          fi
+        fi
+        
+        if [[ "$RUNNER_OS" == "Linux" ]]; then
+          echo "LD_LIBRARY_PATH=${{ inputs.sofa_install_path }}/lib:$SOFA_ROOT/plugins/SofaPython3/lib:$LD_LIBRARY_PATH" | tee -a $GITHUB_ENV
+          if [[ -z "${{ github.event.inputs.local_artifact_path }}" ]]; then
+            echo "LD_LIBRARY_PATH=${{ inputs.local_artifact_path }}/lib:$LD_LIBRARY_PATH" | tee -a $GITHUB_ENV
+          fi
+        fi
 
     - name: Fetch and install Regression_test
       shell: bash
