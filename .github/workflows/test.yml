@@ -27,7 +27,7 @@ jobs:
 
       - name: Launch test
         id: tests
-        uses: sofa-framework/sofa-test-action@master
+        uses: ${{ github.repository_owner }}/sofa-test-action@${{ github.ref_name }}
         with:
           sofa_root: ${{ github.workspace }}/sofa
           regression_file_path: ${{ github.workspace }}/sofa/example
