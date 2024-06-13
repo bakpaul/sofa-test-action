@@ -47,7 +47,7 @@ runs:
         fi
         
         if [[ "$RUNNER_OS" == "Linux" ]]; then
-          if [[ -z "${{ inputs.local_artifact_path }}" ]]; then
+          if [[ ! -z "${{ inputs.local_artifact_path }}" ]]; then
            LOCAL_ARTIFACT=${{ inputs.local_artifact_path }}/lib
           fi
           echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${{ inputs.sofa_install_path }}/lib:$SOFA_ROOT/plugins/SofaPython3/lib:$LOCAL_ARTIFACT" | tee -a $GITHUB_ENV
@@ -65,8 +65,7 @@ runs:
           # Install it in the SOFA bin directory
           $SUDO mv "${{ runner.temp }}"/regression_tmp/install/Regression_*/bin/* "${SOFA_ROOT}/bin"
           chmod +x ${SOFA_ROOT}/bin/Regression_test${{ env.EXE }}
-          export REGRESSION_SCENES_DIR="${WORKSPACE_SRC_PATH}/examples"
-          export REGRESSION_REFERENCES_DIR="${WORKSPACE_SRC_PATH}/regression/references"
+          export REGRESSION_SCENES_DIR="${{ inputs.regression_file_path }}"
           # Run regression test bench
           ${SOFA_ROOT}/bin/Regression_test${{ env.EXE }}
         else
