@@ -13,17 +13,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04]
+        os: [ubuntu-test]
         sofa_branch: [master]
 
     steps:
-      - name: Setup SOFA and environment
-        id: sofa
-        uses: sofa-framework/sofa-setup-action@v4
-        with:
-          sofa_root: ${{ github.workspace }}/sofa
-          sofa_version: ${{ matrix.sofa_branch }}
-          sofa_scope: 'full'
+#      - name: Setup SOFA and environment
+#        id: sofa
+#        uses: sofa-framework/sofa-setup-action@v4
+#        with:
+#          sofa_root: ${{ github.workspace }}/sofa
+#          sofa_version: ${{ matrix.sofa_branch }}
+#          sofa_scope: 'full'
 
       - name: Launch test
         id: tests
