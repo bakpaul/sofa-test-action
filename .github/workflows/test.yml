@@ -59,7 +59,7 @@ jobs:
         id: clone-regression
         shell: bash
         run: |
-          cd ${{ github.workspace }}/sofa
+          cd ${{ github.workspace }}/sofa/share/sofa
           mkdir applications && cd applications
           mkdir plugins && cd plugins 
           git clone https://github.com/sofa-framework/Regression.git
