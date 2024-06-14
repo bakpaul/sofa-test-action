@@ -65,9 +65,7 @@ runs:
           # Install it in the SOFA bin directory
           $SUDO mv "${{ runner.temp }}"/regression_tmp/install/Regression_*/bin/* "${SOFA_ROOT}/bin"
           chmod +x ${SOFA_ROOT}/bin/Regression_test${{ env.EXE }}
-          export REGRESSION_SCENES_DIR="${{ inputs.regression_file_path }}"
-          # Run regression test bench
-          ${SOFA_ROOT}/bin/Regression_test${{ env.EXE }}
+          echo "REGRESSION_SCENES_DIR=${{ inputs.regression_file_path }}" | tee -a $GITHUB_ENV
         else
           echo "Regression tests are not supported on the CI for macOS yet (TODO)"
         fi
@@ -75,3 +73,5 @@ runs:
     - name: Run regression tests
       shell: bash
       run: |
+        # Run regression test bench
+        ${SOFA_ROOT}/bin/Regression_test${{ env.EXE }}
