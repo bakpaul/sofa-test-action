@@ -17,13 +17,42 @@ jobs:
         sofa_branch: [master]
 
     steps:
-#      - name: Setup SOFA and environment
-#        id: sofa
-#        uses: sofa-framework/sofa-setup-action@v4
-#        with:
-#          sofa_root: ${{ github.workspace }}/sofa
-#          sofa_version: ${{ matrix.sofa_branch }}
-#          sofa_scope: 'full'
+      - name: Download and install the latest SOFA ${{ matrix.sofa_branch }} binaries
+        shell: bash
+        run: |
+          # Download and install the latest SOFA ${{ matrix.sofa_branch }} binaries
+          SOFA_OS="$RUNNER_OS"
+          if [[ "$SOFA_OS" == "macOS" ]]; then
+            SOFA_OS="MacOS"
+          fi
+          if ! ls -a "${{ github.workspace }}/sofa"/* >/dev/null 2>&1; then
+            # directory does not exist or is empty
+            mkdir -p "${{ runner.temp }}/sofa_tmp/zip" "${{ runner.temp }}/sofa_tmp/binaries"
+            curl --output "${{ runner.temp }}/sofa_tmp/${SOFA_OS}.zip" -L \
+              https://ci.inria.fr/sofa-ci-dev/job/nightly-generate-binaries/CI_BRANCH=${{ matrix.sofa_branch }},CI_SCOPE=full/lastSuccessfulBuild/artifact/${SOFA_OS}/*zip*/${SOFA_OS}.zip
+            unzip -qq "${{ runner.temp }}"/sofa_tmp/${SOFA_OS}.zip -d "${{ runner.temp }}/sofa_tmp/zip"
+            unzip -qq "${{ runner.temp }}"/sofa_tmp/zip/${SOFA_OS}/SOFA_*.zip -d "${{ runner.temp }}/sofa_tmp/binaries"
+            $SUDO mkdir -p "${{ github.workspace }}/sofa"
+            $SUDO mv "${{ runner.temp }}"/sofa_tmp/binaries/SOFA_*/* "${{ github.workspace }}/sofa"
+          fi
+          echo '--------------------------------------------'
+          echo "SOFA successfully downloaded and installed in ${{ github.workspace }}/sofa"
+          echo '------------- inputs.sofa_root -------------'
+          ls -la "${{ github.workspace }}/sofa"
+          echo '--------------- git-info.txt ---------------'
+          cat "${{ github.workspace }}/sofa"/git-info.txt 2>&1 || true
+
+      - name: Set SOFA_ROOT and outputs.sofa_root
+        id: set-sofa-root
+        shell: bash
+        run: |
+          SOFA_ROOT='${{ github.workspace }}/sofa'
+          echo "SOFA_ROOT=$SOFA_ROOT" | tee -a $GITHUB_ENV
+          echo "$SOFA_ROOT" >> $GITHUB_PATH
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            echo "$SOFA_ROOT\bin" >> $GITHUB_PATH
+          fi
+          echo "name=sofa_root::$(echo $SOFA_ROOT)" >> $GITHUB_OUTPUT
 
       - name: Launch test
         id: tests
