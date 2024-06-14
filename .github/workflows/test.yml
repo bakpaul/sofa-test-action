@@ -70,7 +70,7 @@ jobs:
         uses: bakpaul/sofa-test-action@only_add_regression
         with:
           sofa_install_path: ${{ github.workspace }}/sofa
-          regression_file_path: ${{ github.workspace }}/sofa/share/sofa/example
+          regression_file_path: ${{ github.workspace }}/sofa/share/sofa/examples
           sofa_version: ${{ matrix.sofa_branch }}
 
 
