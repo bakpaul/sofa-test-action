@@ -9,11 +9,11 @@ on:
 jobs:
   run:
     name: Run on ${{ matrix.os }} with SOFA ${{ matrix.sofa_branch }}
-    runs-on: self-hosted
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04]
+        os: [ubuntu-22.04, macos-13, windows-2022]
         sofa_branch: [master]
 
     steps:
