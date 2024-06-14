@@ -51,8 +51,8 @@ runs:
            LOCAL_ARTIFACT=${{ inputs.local_artifact_path }}/lib
           fi
           echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${{ inputs.sofa_install_path }}/lib:$SOFA_ROOT/plugins/SofaPython3/lib:$LOCAL_ARTIFACT" | tee -a $GITHUB_ENV
-
         fi
+        echo "PYTHOHNPATH=$PYTHOHNPATH:${{ inputs.sofa_install_path }}/plugins/SofaPython3/lib/python/site-packages" | tee -a $GITHUB_ENV
 
     - name: Fetch and install Regression_test
       shell: bash
