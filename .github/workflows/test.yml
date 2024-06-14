@@ -61,7 +61,7 @@ jobs:
         run: |
           cd ${{ github.workspace }}/sofa/share/sofa
           mkdir applications && cd applications
-          mkdir plugins && cd plugins 
+          mkdir projects && cd projects 
           git clone https://github.com/sofa-framework/Regression.git
           cd ${{ github.workspace }}
 
