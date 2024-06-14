@@ -53,14 +53,24 @@ jobs:
             echo "$SOFA_ROOT\bin" >> $GITHUB_PATH
           fi
           echo "name=sofa_root::$(echo $SOFA_ROOT)" >> $GITHUB_OUTPUT
+          
+
+      - name: Clone regression for ref folder
+        id: clone-regression
+        shell: bash
+        run: |
+          cd ${{ github.workspace }}/sofa
+          mkdir applications && cd applications
+          mkdir plugins && cd plugins 
+          git clone https://github.com/sofa-framework/Regression.git
+          cd ${{ github.workspace }}
 
       - name: Launch test
         id: tests
         uses: bakpaul/sofa-test-action@only_add_regression
         with:
           sofa_install_path: ${{ github.workspace }}/sofa
-          regression_file_path: ${{ github.workspace }}/sofa/example
-          regression_reference_path: ${{ github.workspace }}/sofa/applications/projects/Regression/references/examples
+          regression_file_path: ${{ github.workspace }}/sofa/share/sofa/example
           sofa_version: ${{ matrix.sofa_branch }}
 
 
