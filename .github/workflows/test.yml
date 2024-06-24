@@ -30,11 +30,17 @@ jobs:
         id: clone-regression
         shell: bash
         run: |
-          cd ${{ github.workspace }}/sofa/share/sofa
+          
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            workPath=$(wslpath -a ${{ github.workspace }})
+          else
+            workPath=${{ github.workspace }}
+          fi
+          cd ${workPath}/sofa/share/sofa
           mkdir applications && cd applications
           mkdir projects && cd projects 
           git clone https://github.com/sofa-framework/Regression.git
-          cd ${{ github.workspace }}
+          cd $workPath
 
       - name: Launch test
         id: tests
