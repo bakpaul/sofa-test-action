@@ -3,34 +3,130 @@ name: 'SOFA Setup Action'
 description: 'Setup everything needed to build a SOFA plugin'
 inputs:
   sofa_root:
-    description: 'SOFA install directory'
+    description: 'SOFA install directory to get Regression binary, set SOFA_ROOT variable and append the PYTHONPATH env variable'
     required: true
-  scenes_path:
-    description: 'Scene test directory'
+  src_dir:
+    description: 'Directory of the sources of the plugin to be tested (regression file will be looked for in example folder)'
     required: true
-  regression_file_path:
-    description: 'Regression test configuration file directory'
+  build_dir:
+    description: 'Build directory of the plugin. Used to include bindings if some are compiled by this plugin'
+    required: false
+  python_version:
+    description: 'python version used to generate binaries'
     required: true
-  regression_reference_path:
-    description: 'Regression test reference directory'
+  python_exe:
+    description: 'path to python executable'
     required: true
+  ci_dir:
+    description: 'Directory of the clone of the ci repository. If none is given, the plugin will be fetched by this action'
+    required: false
+  regression_dir:
+    description: 'Directory of the clone of the Regression repository. If none is given, the plugin will be fetched by this action'
+    required: false
+  publish_logs:
+    description: 'Boolean stating if the logs should be directly published by the action'
+    required: false
+    default: 'true'
 outputs:
+  unit_test_results:
+    description: "Log file containing scene tests results"
+    value: ${{ steps.set-env-vars.outputs.scene_test_results_path }}
+  unit_test_results_path:
+    description: "Log file containing scene tests results"
+    value: ${{ steps.set-env-vars.outputs.scene_test_results_path }}
   scene_test_results:
+    description: "Log file containing scene tests results"
+    value: ${{ steps.set-env-vars.outputs.scene_test_results_path }}
+  scene_test_results_path:
     description: "Log file containing scene tests results"
     value: ${{ steps.set-env-vars.outputs.scene_test_results_path }}
   regression_test_results:
     description: "Log file containing regression tests results"
     value: ${{ steps.set-env-vars.outputs.regression_test_results_path }}
+  regression_test_results_path:
+    description: "Log file containing regression tests results"
+    value: ${{ steps.set-env-vars.outputs.regression_test_results_path }}
 
-# Action code
 runs:
   using: "composite"
   steps:
+
+    - name: Clone missing CI plugin 
+      uses: actions/checkout@v4
+      if: inputs.ci_dir == ""
+      with:
+        repository: 'https://github.com/sofa-framework/ci.git'
+        ref: 'master'
+        path: ci
+
+    - name: Clone missing Regression plugin 
+      uses: actions/checkout@v4
+      if: inputs.regression_dir == ""
+      with:
+        repository: 'https://github.com/sofa-framework/Regression.git'
+        ref: 'master'
+        path: Regression
+
+    - name: Setup environement for tests
+      shell: bash
+      run: |
+
+        CI_DIR=${{ inputs.ci_dir }}
+        if [[ ! -n "${CI_DIR}" ]]; then
+            CI_DIR=${{ workspace }}/ci"
+        fi
+        echo "CI_DIR=${CI_DIR}" | tee -a $GITHUB_ENV
+        
+        REGRESSION_DIR=${{ inputs.regression_dir }}
+        if [[ ! -n "${CI_DIR}" ]]; then
+            REGRESSION_DIR=${{ workspace }}/Regression"
+        fi
+        echo "REGRESSION_DIR=${REGRESSION_DIR}" | tee -a $GITHUB_ENV
+        
+
+
+        if [[ "$RUNNER_OS" == "Windows" ]]; then
+          echo "${{ inputs.build_dir }}/lib" >> $GITHUB_PATH
+          echo "${{ inputs.build_dir }}/bin" >> $GITHUB_PATH
+
+          pythonroot="$(dirname ${{ inputs.python_exe }})"
+          pythonroot="$(cd "$pythonroot" && pwd)"
+          echo "$pythonroot" >> $GITHUB_PATH
+          echo "$pythonroot/DLLs" >> $GITHUB_PATH
+          echo "$pythonroot/Lib" >> $GITHUB_PATH
+
+          echo "${{ inputs.sofa_root }}/plugins/SofaPython3/bin" >> $GITHUB_PATH
+          echo "SOFA_PLUGIN_PATH=${{ inputs.build_dir }}/bin" | tee -a $GITHUB_ENV
+          
+        else
+          echo "SOFA_PLUGIN_PATH=${{ inputs.build_dir }}/lib" | tee -a $GITHUB_ENV
+        fi
+
+        if [[ "$RUNNER_OS" == "macOS" ]]; then
+          echo "DYLD_LIBRARY_PATH=${{ inputs.build_dir }}/lib:${{ inputs.sofa_root }}/lib:${{ inputs.sofa_root }}/plugins/SofaPython3/lib:$DYLD_LIBRARY_PATH" | tee -a $GITHUB_ENV
+        fi
+
+        if [[ "$RUNNER_OS" == "Linux" ]]; then
+          echo "LD_LIBRARY_PATH=${{ inputs.build_dir }}/lib:${{ inputs.sofa_root }}/lib:${{ inputs.sofa_root }}/plugins/SofaPython3/lib:$LD_LIBRARY_PATH" | tee -a $GITHUB_ENV
+        fi
+
+
+    - name: Launch unit tests
+      shell: bash
+      run: |
+        echo TODO
+
     - name: Launch scene tests
       shell: bash
       run: |
         echo TODO
+
     - name: Launch regression tests
+      shell: bash
+      run: |
+        echo TODO
+
+    - name: Publish logs
       shell: bash
       run: |
         echo TODO
