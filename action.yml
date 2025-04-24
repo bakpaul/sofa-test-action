@@ -66,7 +66,7 @@ runs:
 
     - name: Clone missing CI plugin 
       uses: actions/checkout@v4
-      if: inputs.ci_dir == ""
+      if: inputs.ci_dir == ''
       with:
         repository: 'sofa-framework/ci'
         ref: 'master'
@@ -74,7 +74,7 @@ runs:
 
     - name: Clone missing Regression plugin 
       uses: actions/checkout@v4
-      if: inputs.regression_dir == ""
+      if: inputs.regression_dir == ''
       with:
         repository: 'sofa-framework/Regression'
         ref: 'master'
@@ -86,13 +86,13 @@ runs:
 
         CI_DIR=${{ inputs.ci_dir }}
         if [[ ! -n "${CI_DIR}" ]]; then
-            CI_DIR=${{ workspace }}/ci"
+            CI_DIR=${{ github.workspace }}/ci"
         fi
         echo "CI_DIR=${CI_DIR}" | tee -a $GITHUB_ENV
         
         REGRESSION_DIR=${{ inputs.regression_dir }}
         if [[ ! -n "${CI_DIR}" ]]; then
-            REGRESSION_DIR=${{ workspace }}/Regression"
+            REGRESSION_DIR=${{ github.workspace }}/Regression"
         fi
         echo "REGRESSION_DIR=${REGRESSION_DIR}" | tee -a $GITHUB_ENV
         
