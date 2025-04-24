@@ -68,5 +68,5 @@ jobs:
         with:
           sofa_root: ${{ github.workspace }}/sofa
           src_dir: ${{ env.WORKSPACE_SRC_PATH }}
-          python_version: ${{ steps.sofa.outputs.python_version }}
           python_exe: ${{ steps.sofa.outputs.python_exe }}
+          nb_parallel_threads: '4'
