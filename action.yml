@@ -69,7 +69,7 @@ runs:
       if: inputs.ci_dir == ''
       with:
         repository: 'sofa-framework/ci'
-        ref: 'master'
+        ref: 'jenkins_gha_migration'
         path: ci
 
     - name: Clone missing Regression plugin 
