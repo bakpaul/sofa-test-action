@@ -144,8 +144,8 @@ runs:
       if: inputs.run_scene_tests == 'true'
       shell: bash
       run: |
-        /bin/bash "$CI_DIR/scripts/scene-tests.sh" run "${{ inputs.build_dir }}" "${{ inputs.src_dir }}" ${{ inputs.nb_parallel_threads }}
-        /bin/bash "$CI_DIR/scripts/scene-tests.sh" print-summary "${{ inputs.build_dir }}" "${{ inputs.src_dir }}" ${{ inputs.nb_parallel_threads }}
+        /bin/bash "$CI_DIR/scripts/scene-tests.sh" run "${{ inputs.sofa_root }}" "${{ inputs.src_dir }}" ${{ inputs.nb_parallel_threads }}
+        /bin/bash "$CI_DIR/scripts/scene-tests.sh" print-summary "${{ inputs.sofa_root }}" "${{ inputs.src_dir }}" ${{ inputs.nb_parallel_threads }}
 
         echo "scenes_total=$(/bin/bash $CI_DIR/scripts/scene-tests.sh count-tested-scenes ${{ inputs.build_dir }} ${{ inputs.src_dir }})" > ${{ inputs.build_dir }}/scene-tests/scene-tests_results.txt
         echo "scenes_successes=$(/bin/bash "$CI_DIR/scripts/scene-tests.sh" count-successes ${{ inputs.build_dir }} ${{ inputs.src_dir }})" >> ${{ inputs.build_dir }}/scene-tests/scene-tests_results.txt
