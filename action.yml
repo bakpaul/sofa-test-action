@@ -68,7 +68,7 @@ runs:
       uses: actions/checkout@v4
       if: inputs.ci_dir == ''
       with:
-        repository: 'sofa-framework/ci'
+        repository: 'bakpaul/ci'
         ref: 'jenkins_gha_migration'
         path: ci
 
