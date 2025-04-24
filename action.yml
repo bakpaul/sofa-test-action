@@ -10,7 +10,10 @@ inputs:
     required: true
   build_dir:
     description: 'Build directory of the plugin. Used to include bindings if some are compiled by this plugin'
-    required: false
+    required: true
+  output_dir:
+    description: 'Directory where to dump logs and results of tests. Will be created if it does not exist'
+    required: true
   python_exe:
     description: 'path to python executable'
     required: true
@@ -84,6 +87,10 @@ runs:
       shell: bash
       run: |
 
+        if [[ ! -d "${{ inputs.output_dir }}" ]]; then
+            mkdir -p "${{ inputs.output_dir }}"
+        fi
+
         CI_DIR=${{ inputs.ci_dir }}
         if [[ -z "$CI_DIR" ]]; then
             CI_DIR="${{ github.workspace }}/ci"
@@ -129,44 +136,44 @@ runs:
       if: inputs.run_unit_tests == 'true'
       shell: bash
       run: |
-        /bin/bash "$CI_DIR/scripts/unit-tests.sh" run unit "${{ inputs.build_dir }}" "${{ inputs.src_dir }}" ${{ inputs.nb_parallel_threads }}
-        /bin/bash "$CI_DIR/scripts/unit-tests.sh" print-summary unit "${{ inputs.build_dir }}" "${{ inputs.src_dir }}" ${{ inputs.nb_parallel_threads }}
+        /bin/bash "$CI_DIR/scripts/unit-tests.sh" run unit "${{ inputs.build_dir }}" "${{ inputs.src_dir }}" "${{ inputs.output_dir }}" ${{ inputs.nb_parallel_threads }}
+        /bin/bash "$CI_DIR/scripts/unit-tests.sh" print-summary unit "${{ inputs.build_dir }}" "${{ inputs.src_dir }}" "${{ inputs.output_dir }}" ${{ inputs.nb_parallel_threads }}
 
-        echo "tests_suites=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-test-suites unit ${{ inputs.build_dir }} ${{ inputs.src_dir }})" > ${{ inputs.build_dir }}/unit-tests/unit-tests_results.txt
-        echo "tests_total=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-tests unit ${{ inputs.build_dir }} ${{ inputs.src_dir }})" >> ${{ inputs.build_dir }}/unit-tests/unit-tests_results.txt
-        echo "tests_disabled=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-disabled unit ${{ inputs.build_dir }} ${{ inputs.src_dir }})" >> ${{ inputs.build_dir }}/unit-tests/unit-tests_results.txt
-        echo "tests_failures=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-failures unit ${{ inputs.build_dir }} ${{ inputs.src_dir }})" >> ${{ inputs.build_dir }}/unit-tests/unit-tests_results.txt
-        echo "tests_errors=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-errors unit ${{ inputs.build_dir }} ${{ inputs.src_dir }})" >> ${{ inputs.build_dir }}/unit-tests/unit-tests_results.txt
-        echo "tests_duration=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-durations unit ${{ inputs.build_dir }} ${{ inputs.src_dir }})" >> ${{ inputs.build_dir }}/unit-tests/unit-tests_results.txt
+        echo "tests_suites=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-test-suites unit ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }})" > ${{ inputs.output_dir }}/unit-tests/unit-tests_results.txt
+        echo "tests_total=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-tests unit ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }})" >> ${{ inputs.output_dir }}/unit-tests/unit-tests_results.txt
+        echo "tests_disabled=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-disabled unit ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }})" >> ${{ inputs.output_dir }}/unit-tests/unit-tests_results.txt
+        echo "tests_failures=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-failures unit ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }})" >> ${{ inputs.output_dir }}/unit-tests/unit-tests_results.txt
+        echo "tests_errors=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-errors unit ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }})" >> ${{ inputs.output_dir }}/unit-tests/unit-tests_results.txt
+        echo "tests_duration=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-durations unit ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }})" >> ${{ inputs.output_dir }}/unit-tests/unit-tests_results.txt
 
 
     - name: Launch scene tests
       if: inputs.run_scene_tests == 'true'
       shell: bash
       run: |
-        /bin/bash "$CI_DIR/scripts/scene-tests.sh" run "${{ inputs.sofa_root }}" "${{ inputs.src_dir }}" ${{ inputs.nb_parallel_threads }}
-        /bin/bash "$CI_DIR/scripts/scene-tests.sh" print-summary "${{ inputs.sofa_root }}" "${{ inputs.src_dir }}" ${{ inputs.nb_parallel_threads }}
+        /bin/bash "$CI_DIR/scripts/scene-tests.sh" run "${{ inputs.sofa_root }}" "${{ inputs.src_dir }}" "${{ inputs.output_dir }}" ${{ inputs.nb_parallel_threads }}
+        /bin/bash "$CI_DIR/scripts/scene-tests.sh" print-summary "${{ inputs.sofa_root }}" "${{ inputs.src_dir }}" "${{ inputs.output_dir }}" ${{ inputs.nb_parallel_threads }}
 
-        echo "scenes_total=$(/bin/bash $CI_DIR/scripts/scene-tests.sh count-tested-scenes ${{ inputs.build_dir }} ${{ inputs.src_dir }})" > ${{ inputs.build_dir }}/scene-tests/scene-tests_results.txt
-        echo "scenes_successes=$(/bin/bash "$CI_DIR/scripts/scene-tests.sh" count-successes ${{ inputs.build_dir }} ${{ inputs.src_dir }})" >> ${{ inputs.build_dir }}/scene-tests/scene-tests_results.txt
-        echo "scenes_errors=$(/bin/bash "$CI_DIR/scripts/scene-tests.sh" count-errors ${{ inputs.build_dir }} ${{ inputs.src_dir }})" >> ${{ inputs.build_dir }}/scene-tests/scene-tests_results.txt
-        echo "scenes_crashes=$(/bin/bash "$CI_DIR/scripts/scene-tests.sh" count-crashes ${{ inputs.build_dir }} ${{ inputs.src_dir }})" >> ${{ inputs.build_dir }}/scene-tests/scene-tests_results.txt
-        echo "scenes_duration=$(/bin/bash "$CI_DIR/scripts/scene-tests.sh" count-durations ${{ inputs.build_dir }} ${{ inputs.src_dir }})" >> ${{ inputs.build_dir }}/scene-tests/scene-tests_results.txt
+        echo "scenes_total=$(/bin/bash $CI_DIR/scripts/scene-tests.sh count-tested-scenes ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }})" > ${{ inputs.output_dir }}/scene-tests/scene-tests_results.txt
+        echo "scenes_successes=$(/bin/bash "$CI_DIR/scripts/scene-tests.sh" count-successes ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }})" >> ${{ inputs.output_dir }}/scene-tests/scene-tests_results.txt
+        echo "scenes_errors=$(/bin/bash "$CI_DIR/scripts/scene-tests.sh" count-errors ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }})" >> ${{ inputs.output_dir }}/scene-tests/scene-tests_results.txt
+        echo "scenes_crashes=$(/bin/bash "$CI_DIR/scripts/scene-tests.sh" count-crashes ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }})" >> ${{ inputs.output_dir }}/scene-tests/scene-tests_results.txt
+        echo "scenes_duration=$(/bin/bash "$CI_DIR/scripts/scene-tests.sh" count-durations ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }})" >> ${{ inputs.output_dir }}/scene-tests/scene-tests_results.txt
 
 
     - name: Launch regression tests
       if: inputs.run_regression_tests == 'true'
       shell: bash
       run: |
-        /bin/bash "$CI_DIR/scripts/unit-tests.sh" run regression "${{ inputs.build_dir }}" "${{ inputs.src_dir }}" ${{ inputs.nb_parallel_threads }}
-        /bin/bash "$CI_DIR/scripts/unit-tests.sh" print-summary regression "${{ inputs.build_dir }}" "${{ inputs.src_dir }}" ${{ inputs.nb_parallel_threads }}
+        /bin/bash "$CI_DIR/scripts/unit-tests.sh" run regression "${{ inputs.build_dir }}" "${{ inputs.src_dir }}" "${{ inputs.output_dir }}" ${{ inputs.nb_parallel_threads }}
+        /bin/bash "$CI_DIR/scripts/unit-tests.sh" print-summary regression "${{ inputs.build_dir }}" "${{ inputs.src_dir }}" "${{ inputs.output_dir }}" ${{ inputs.nb_parallel_threads }}
 
-        echo "regressions_suites=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-test-suites regression ${{ inputs.build_dir }} ${{ inputs.src_dir }} )" > ${{ inputs.build_dir }}/regression-tests/regression-tests_results.txt
-        echo "regressions_total=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-tests regression ${{ inputs.build_dir }} ${{ inputs.src_dir }} )" >> ${{ inputs.build_dir }}/regression-tests/regression-tests_results.txt
-        echo "regressions_disabled=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-disabled regression ${{ inputs.build_dir }} ${{ inputs.src_dir }} )" >> ${{ inputs.build_dir }}/regression-tests/regression-tests_results.txt
-        echo "regressions_failures=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-failures regression ${{ inputs.build_dir }} ${{ inputs.src_dir }} )" >> ${{ inputs.build_dir }}/regression-tests/regression-tests_results.txt
-        echo "regressions_errors=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-errors regression ${{ inputs.build_dir }} ${{ inputs.src_dir }} )" >> ${{ inputs.build_dir }}/regression-tests/regression-tests_results.txt
-        echo "regressions_duration=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-durations regression ${{ inputs.build_dir }} ${{ inputs.src_dir }} )" >> ${{ inputs.build_dir }}/regression-tests/regression-tests_results.txt
+        echo "regressions_suites=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-test-suites regression ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }} )" > ${{ inputs.output_dir }}/regression-tests/regression-tests_results.txt
+        echo "regressions_total=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-tests regression ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }} )" >> ${{ inputs.output_dir }}/regression-tests/regression-tests_results.txt
+        echo "regressions_disabled=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-disabled regression ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }} )" >> ${{ inputs.output_dir }}/regression-tests/regression-tests_results.txt
+        echo "regressions_failures=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-failures regression ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }} )" >> ${{ inputs.output_dir }}/regression-tests/regression-tests_results.txt
+        echo "regressions_errors=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-errors regression ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }} )" >> ${{ inputs.output_dir }}/regression-tests/regression-tests_results.txt
+        echo "regressions_duration=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-durations regression ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }} )" >> ${{ inputs.output_dir }}/regression-tests/regression-tests_results.txt
 
 
     - name: Publish logs
