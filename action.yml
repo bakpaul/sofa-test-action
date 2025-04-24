@@ -85,16 +85,16 @@ runs:
       run: |
 
         CI_DIR=${{ inputs.ci_dir }}
-        if [[ ! -n "${CI_DIR}" ]]; then
-            CI_DIR=${{ github.workspace }}/ci"
+        if [[ -z "$CI_DIR" ]]; then
+            CI_DIR="${{ github.workspace }}/ci"
         fi
-        echo "CI_DIR=${CI_DIR}" | tee -a $GITHUB_ENV
+        echo "CI_DIR=$CI_DIR" >> $GITHUB_ENV
         
         REGRESSION_DIR=${{ inputs.regression_dir }}
-        if [[ ! -n "${CI_DIR}" ]]; then
-            REGRESSION_DIR=${{ github.workspace }}/Regression"
+        if [[ -z "$REGRESSION_DIR" ]]; then
+            REGRESSION_DIR="${{ github.workspace }}/Regression"
         fi
-        echo "REGRESSION_DIR=${REGRESSION_DIR}" | tee -a $GITHUB_ENV
+        echo "REGRESSION_DIR=$REGRESSION_DIR" >> $GITHUB_ENV
         
 
 
