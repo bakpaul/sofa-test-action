@@ -67,6 +67,7 @@ jobs:
         uses: bakpaul/sofa-test-action@wip_first_attempt
         with:
           sofa_root: ${{ github.workspace }}/sofa
+          sofa_version: master
           src_dir: ${{ env.WORKSPACE_SRC_PATH }}
           build_dir: ${{ env.WORKSPACE_BUILD_PATH }}
           python_exe: ${{ steps.sofa.outputs.python_exe }}

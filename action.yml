@@ -5,6 +5,9 @@ inputs:
   sofa_root:
     description: 'SOFA install directory to get Regression binary, set SOFA_ROOT variable and append the PYTHONPATH env variable'
     required: true
+  sofa_version:
+    description: 'Version of SOFA used. Needed to know which binary verison of Regression to use (either master or a release e.g. v24.12)'
+    required: true
   src_dir:
     description: 'Directory of the sources of the plugin to be tested (regression file will be looked for in example folder)'
     required: true
@@ -102,7 +105,13 @@ runs:
             REGRESSION_DIR="${{ github.workspace }}/Regression"
         fi
         echo "REGRESSION_DIR=$REGRESSION_DIR" >> $GITHUB_ENV
-        
+
+        ##Install Regression release
+        curl --output "${{ runner.temp }}/regression_tmp/${RUNNER_OS}.zip" -L https://github.com/sofa-framework/regression/releases/download/release-master/Regression_test_master_for-SOFA-${{ inputs.sofa_version }}_${RUNNER_OS}.zip
+        unzip -qq "${{ runner.temp }}/regression_tmp/${RUNNER_OS}.zip" -d "${{ github.workspace }}/regression_binaries"
+        echo "REGRESSION_BINARY_DIR=${{ github.workspace }}/regression_binaries/" >> $GITHUB_ENV
+
+            
 
 
         if [[ "$RUNNER_OS" == "Windows" ]]; then
@@ -165,15 +174,15 @@ runs:
       if: inputs.run_regression_tests == 'true'
       shell: bash
       run: |
-        /bin/bash "$CI_DIR/scripts/unit-tests.sh" run regression "${{ inputs.build_dir }}" "${{ inputs.src_dir }}" "${{ inputs.output_dir }}" ${{ inputs.nb_parallel_threads }}
-        /bin/bash "$CI_DIR/scripts/unit-tests.sh" print-summary regression "${{ inputs.build_dir }}" "${{ inputs.src_dir }}" "${{ inputs.output_dir }}" ${{ inputs.nb_parallel_threads }}
+        /bin/bash "$CI_DIR/scripts/unit-tests.sh" run regression "$REGRESSION_BINARY_DIR" "${{ inputs.src_dir }}" "${{ inputs.output_dir }}" ${{ inputs.nb_parallel_threads }}
+        /bin/bash "$CI_DIR/scripts/unit-tests.sh" print-summary regression "$REGRESSION_BINARY_DIR" "${{ inputs.src_dir }}" "${{ inputs.output_dir }}" ${{ inputs.nb_parallel_threads }}
 
-        echo "regressions_suites=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-test-suites regression ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }} )" > ${{ inputs.output_dir }}/regression-tests/regression-tests_results.txt
-        echo "regressions_total=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-tests regression ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }} )" >> ${{ inputs.output_dir }}/regression-tests/regression-tests_results.txt
-        echo "regressions_disabled=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-disabled regression ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }} )" >> ${{ inputs.output_dir }}/regression-tests/regression-tests_results.txt
-        echo "regressions_failures=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-failures regression ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }} )" >> ${{ inputs.output_dir }}/regression-tests/regression-tests_results.txt
-        echo "regressions_errors=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-errors regression ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }} )" >> ${{ inputs.output_dir }}/regression-tests/regression-tests_results.txt
-        echo "regressions_duration=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-durations regression ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }} )" >> ${{ inputs.output_dir }}/regression-tests/regression-tests_results.txt
+        echo "regressions_suites=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-test-suites regression $REGRESSION_BINARY_DIR ${{ inputs.src_dir }} ${{ inputs.output_dir }} )" > ${{ inputs.output_dir }}/regression-tests/regression-tests_results.txt
+        echo "regressions_total=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-tests regression $REGRESSION_BINARY_DIR ${{ inputs.src_dir }} ${{ inputs.output_dir }} )" >> ${{ inputs.output_dir }}/regression-tests/regression-tests_results.txt
+        echo "regressions_disabled=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-disabled regression $REGRESSION_BINARY_DIR ${{ inputs.src_dir }} ${{ inputs.output_dir }} )" >> ${{ inputs.output_dir }}/regression-tests/regression-tests_results.txt
+        echo "regressions_failures=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-failures regression $REGRESSION_BINARY_DIR ${{ inputs.src_dir }} ${{ inputs.output_dir }} )" >> ${{ inputs.output_dir }}/regression-tests/regression-tests_results.txt
+        echo "regressions_errors=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-errors regression $REGRESSION_BINARY_DIR ${{ inputs.src_dir }} ${{ inputs.output_dir }} )" >> ${{ inputs.output_dir }}/regression-tests/regression-tests_results.txt
+        echo "regressions_duration=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-durations regression $REGRESSION_BINARY_DIR ${{ inputs.src_dir }} ${{ inputs.output_dir }} )" >> ${{ inputs.output_dir }}/regression-tests/regression-tests_results.txt
 
 
     - name: Publish logs
