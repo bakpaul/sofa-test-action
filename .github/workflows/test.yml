@@ -64,7 +64,7 @@ jobs:
 
 
       - name: Launch test 
-        uses: bakpaul/sofa-test-action@versionOfAction
+        uses: bakpaul/sofa-test-action@wip_first_attempt
         with:
           sofa_root: ${{ github.workspace }}/sofa
           src_dir: ${{ env.WORKSPACE_SRC_PATH }}
