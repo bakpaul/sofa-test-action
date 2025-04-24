@@ -2,6 +2,10 @@ name: Test sofa-setup-action
 
 on:
   workflow_dispatch:
+    inputs:
+      versionOfAction:
+        description: 'Version of the action being used'
+        required: true
   push:
   pull_request:
     types: [opened, synchronize, reopened, edited]
@@ -63,7 +67,16 @@ jobs:
           fi
 
 
-      - name: Launch test
+      - name: Launch test on dispatch
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        uses: sofa-framework/sofa-test-action@${{ github.event.inputs.versionOfAction }}
+        with:
+          sofa_root: ${{ github.workspace }}/sofa
+          src_dir: ${{ env.WORKSPACE_SRC_PATH }}
+          python_exe: ${{ steps.sofa.outputs.python_exe }}
+          nb_parallel_threads: '4'
+
+      - name: Launch test on push/pr
         uses: sofa-framework/sofa-test-action@master
         with:
           sofa_root: ${{ github.workspace }}/sofa
