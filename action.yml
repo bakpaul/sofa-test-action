@@ -68,7 +68,7 @@ runs:
       uses: actions/checkout@v4
       if: inputs.ci_dir == ""
       with:
-        repository: 'https://github.com/sofa-framework/ci.git'
+        repository: 'sofa-framework/ci'
         ref: 'master'
         path: ci
 
@@ -76,7 +76,7 @@ runs:
       uses: actions/checkout@v4
       if: inputs.regression_dir == ""
       with:
-        repository: 'https://github.com/sofa-framework/Regression.git'
+        repository: 'sofa-framework/Regression'
         ref: 'master'
         path: Regression
 

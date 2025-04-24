@@ -29,7 +29,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
         with:
-          repository: 'https://github.com/sofa-framework/BeamAdapter.git'
+          repository: 'sofa-framework/BeamAdapter'
           ref: 'master'
           path: ${{ env.WORKSPACE_SRC_PATH }}        
       
