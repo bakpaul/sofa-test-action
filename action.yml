@@ -114,9 +114,6 @@ runs:
         chmod +x ${{ github.workspace }}/Regression_binaries/bin/*
         echo "REGRESSION_BINARY_DIR=${{ github.workspace }}/Regression_binaries/" >> $GITHUB_ENV
 
-            
-
-
         if [[ "$RUNNER_OS" == "Windows" ]]; then
           echo "${{ inputs.build_dir }}/lib" >> $GITHUB_PATH
           echo "${{ inputs.build_dir }}/bin" >> $GITHUB_PATH
@@ -186,10 +183,11 @@ runs:
         echo "regressions_failures=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-failures regression $REGRESSION_BINARY_DIR ${{ inputs.src_dir }} ${{ inputs.output_dir }} )" >> ${{ inputs.output_dir }}/regression-tests/regression-tests_results.txt
         echo "regressions_errors=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-errors regression $REGRESSION_BINARY_DIR ${{ inputs.src_dir }} ${{ inputs.output_dir }} )" >> ${{ inputs.output_dir }}/regression-tests/regression-tests_results.txt
         echo "regressions_duration=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-durations regression $REGRESSION_BINARY_DIR ${{ inputs.src_dir }} ${{ inputs.output_dir }} )" >> ${{ inputs.output_dir }}/regression-tests/regression-tests_results.txt
-
-
-    - name: Publish logs
-      shell: bash
-      run: |
-        echo TODO
-
+ 
+    - name: Publish tests logs
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: tests-logs-${{ runner.os }}
+        path: |
+            ${{ inputs.output_dir }}
