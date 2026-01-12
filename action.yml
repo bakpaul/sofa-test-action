@@ -141,8 +141,13 @@ runs:
 
         echo "SOFA_ROOT=${{ inputs.sofa_root }}"  | tee -a $GITHUB_ENV
 
+    - name: Install missing pip packages
+      shell: bash
+      run: |
+        python3 -m pip install prettytable
+
     - name: Launch unit tests
-      if: inputs.run_unit_tests == 'true'
+      if: always() && inputs.run_unit_tests == 'true'
       shell: bash
       run: |
         /bin/bash "$CI_DIR/scripts/unit-tests.sh" run unit "${{ inputs.build_dir }}" "${{ inputs.src_dir }}" "${{ inputs.output_dir }}" ${{ inputs.nb_parallel_threads }}
@@ -154,10 +159,12 @@ runs:
         echo "tests_failures=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-failures unit ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }})" >> ${{ inputs.output_dir }}/unit-tests/unit-tests_results.txt
         echo "tests_errors=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-errors unit ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }})" >> ${{ inputs.output_dir }}/unit-tests/unit-tests_results.txt
         echo "tests_duration=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-durations unit ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }})" >> ${{ inputs.output_dir }}/unit-tests/unit-tests_results.txt
+        
+        python3 "$CI_DIR/scripts/exctractErrorFromXML.py" "${{ inputs.output_dir }}/unit-tests/reports" "${{ inputs.output_dir }}/unit-tests"
 
 
     - name: Launch scene tests
-      if: inputs.run_scene_tests == 'true'
+      if: always() && inputs.run_scene_tests == 'true'
       shell: bash
       run: |
         /bin/bash "$CI_DIR/scripts/scene-tests.sh" run "${{ inputs.sofa_root }}" "${{ inputs.src_dir }}" "${{ inputs.output_dir }}" ${{ inputs.nb_parallel_threads }}
@@ -170,8 +177,16 @@ runs:
         echo "scenes_duration=$(/bin/bash "$CI_DIR/scripts/scene-tests.sh" count-durations ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }})" >> ${{ inputs.output_dir }}/scene-tests/scene-tests_results.txt
 
 
+        if [[ -f "${{ inputs.output_dir }}/scene-tests/reports/crashes.txt" && "$(cat "${{ inputs.output_dir }}/scene-tests/reports/crashes.txt")" != "" ]]; then
+            cp ${{ inputs.output_dir }}/scene-tests/reports/crashes.txt ${{ inputs.output_dir }}/scene-tests_crashes
+        fi
+        if [[ -f "${{ inputs.output_dir }}/scene-tests/reports/errors.txt" && "$(cat "${{ inputs.output_dir }}/scene-tests/reports/errors.txt")" != "" ]]; then
+            cp ${{ inputs.output_dir }}/scene-tests/reports/errors.txt ${{ inputs.output_dir }}/scene-tests_errors
+        fi
+
+
     - name: Launch regression tests
-      if: inputs.run_regression_tests == 'true'
+      if: always() && inputs.run_regression_tests == 'true'
       shell: bash
       run: |
         /bin/bash "$CI_DIR/scripts/unit-tests.sh" run regression "$REGRESSION_BINARY_DIR" "${{ inputs.src_dir }}" "${{ inputs.output_dir }}" ${{ inputs.nb_parallel_threads }}
@@ -184,6 +199,48 @@ runs:
         echo "regressions_errors=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-errors regression $REGRESSION_BINARY_DIR ${{ inputs.src_dir }} ${{ inputs.output_dir }} )" >> ${{ inputs.output_dir }}/regression-tests/regression-tests_results.txt
         echo "regressions_duration=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-durations regression $REGRESSION_BINARY_DIR ${{ inputs.src_dir }} ${{ inputs.output_dir }} )" >> ${{ inputs.output_dir }}/regression-tests/regression-tests_results.txt
  
+        "$CI_DIR/scripts/exctractErrorFromXML.py" "${{ inputs.output_dir }}/regression-tests/reports" "${{ inputs.output_dir }}/regression-tests"
+
+
+    - name: Summarize tests results
+      shell: bash
+      run: |
+        if [[ "$(cd "${{ inputs.output_dir }}" && find . -maxdepth 1 -type f)" != "" ]]; then
+          echo "❌ Tests have resulted in : "
+          echo ""
+          python3 $CI_DIR/scripts/generate-tests-table.py "${{ inputs.output_dir }}"
+          echo ""
+          echo "#----------------------------------------#"
+          echo "#---------------Quick Logs---------------#"
+          echo "#----------------------------------------#"
+          for testType in 'unit' 'scene' 'regression';
+            do 
+              for errorType in 'errors' 'crashes' 'failures';
+              do
+                if [ -f "${{ inputs.output_dir }}/${testType}-tests_${errorType}" ]; then 
+                  capitalized="$(echo "${testType:0:1}" | tr '[:lower:]' '[:upper:]')${testType:1}"
+                  echo ""
+                  echo -e "${bold}${capitalized} ${errorType}:${normal}"
+                  echo ""
+                  cat "${{ inputs.output_dir }}/${testType}-tests_${errorType}"
+                  echo ""
+                  echo "#----------------------------------------#"
+                fi
+              done
+            done
+          echo -e "${bold}You can download all logs here : ${{ steps.publish-tests-logs.outputs.artifact-url }}${normal}"
+          exit 1
+        elif [[ "${{ steps.unit-tests-step.outcome }}" == "failure" || "${{ steps.scene-tests-step.outcome }}" == "failure" || "${{ steps.regression-tests-step.outcome }}" == "failure" ]]; then
+          echo "❌ Something whent wrong during one of the tests steps"
+          echo -e "${bold}Please check this action logs, and download tests logs here: ${{ steps.publish-tests-logs.outputs.artifact-url }}${normal}"
+          exit 1
+        else
+          echo "✅ Tests where successful : "
+          echo ""
+          python3 $CI_DIR/scripts/generate-tests-table.py "${{ inputs.output_dir }}/"
+          echo ""
+        fi
+
     - name: Publish tests logs
       if: always()
       uses: actions/upload-artifact@v4
