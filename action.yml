@@ -204,7 +204,7 @@ runs:
         echo "regressions_errors=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-errors regression $REGRESSION_BINARY_DIR ${{ inputs.src_dir }} ${{ inputs.output_dir }} )" >> ${{ inputs.output_dir }}/regression-tests/regression-tests_results.txt
         echo "regressions_duration=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-durations regression $REGRESSION_BINARY_DIR ${{ inputs.src_dir }} ${{ inputs.output_dir }} )" >> ${{ inputs.output_dir }}/regression-tests/regression-tests_results.txt
  
-        "$CI_DIR/scripts/exctractErrorFromXML.py" "${{ inputs.output_dir }}/regression-tests/reports" "${{ inputs.output_dir }}/regression-tests"
+        python3 "$CI_DIR/scripts/exctractErrorFromXML.py" "${{ inputs.output_dir }}/regression-tests/reports" "${{ inputs.output_dir }}/regression-tests"
 
 
     - name: Summarize tests results
