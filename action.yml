@@ -207,6 +207,16 @@ runs:
         python3 "$CI_DIR/scripts/exctractErrorFromXML.py" "${{ inputs.output_dir }}/regression-tests/reports" "${{ inputs.output_dir }}/regression-tests"
 
 
+    - name: Publish tests logs
+      id: publish-tests-logs
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: tests-logs-${{ runner.os }}
+        path: |
+            ${{ inputs.output_dir }}
+
+
     - name: Summarize tests results
       shell: bash
       run: |
@@ -245,11 +255,3 @@ runs:
           python3 $CI_DIR/scripts/generate-tests-table.py "${{ inputs.output_dir }}/"
           echo ""
         fi
-
-    - name: Publish tests logs
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: tests-logs-${{ runner.os }}
-        path: |
-            ${{ inputs.output_dir }}
