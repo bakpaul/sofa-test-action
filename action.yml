@@ -110,14 +110,18 @@ runs:
         else
           if [[ "$RUNNER_OS" == "Windows" ]]; then
             OUTPUT_DIR=$(echo "$OUTPUT_DIR" | tr '\\' '/' | sed 's/^\([A-Za-z]\):/\/\L\1/')
+            if [[ ! -d "$OUTPUT_DIR" ]]; then
+                mkdir -p "$OUTPUT_DIR"
+            fi
           else
+            if [[ ! -d "$OUTPUT_DIR" ]]; then
+                mkdir -p "$OUTPUT_DIR"
+            fi
             OUTPUT_DIR=$(cd "$OUTPUT_DIR" && pwd)
           fi
         fi
 
-        if [[ ! -d "$OUTPUT_DIR" ]]; then
-            mkdir -p "$OUTPUT_DIR"
-        fi
+
 
         CI_DIR=${{ inputs.ci_dir }}
         if [[ -z "$CI_DIR" ]]; then
