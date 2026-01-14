@@ -95,7 +95,11 @@ runs:
         fi
 
 
-        WORKSPACE_DIR=$(cd ${{ github.workspace }} && pwd)
+        if [[ "$RUNNER_OS" == "Windows" ]]; then
+          WORKSPACE_DIR=$(echo "${{ github.workspace }}" | tr '\\' '/' | sed 's/^\([A-Za-z]\):/\/\L\1/')
+        else
+          WORKSPACE_DIR=$(cd "${{ github.workspace }}" && pwd)
+        fi
         echo "WORKSPACE_DIR=$WORKSPACE_DIR" >> $GITHUB_ENV
 
         CI_DIR=${{ inputs.ci_dir }}
@@ -120,20 +124,25 @@ runs:
         echo "REGRESSION_BINARY_DIR=$WORKSPACE_DIR/Regression_binaries/" >> $GITHUB_ENV
 
         if [[ "$RUNNER_OS" == "Windows" ]]; then
-          echo "${{ inputs.build_dir }}/lib" >> $GITHUB_PATH
-          echo "${{ inputs.build_dir }}/bin" >> $GITHUB_PATH
+          BUILD_DIR_UNIX=$(echo "${{ inputs.build_dir }}" | tr '\\' '/' | sed 's/^\([A-Za-z]\):/\/\L\1/')
+          SOFA_ROOT_UNIX=$(echo "${{ inputs.sofa_root }}" | tr '\\' '/' | sed 's/^\([A-Za-z]\):/\/\L\1/')
+          
+          echo "$BUILD_DIR_UNIX/lib" >> $GITHUB_PATH
+          echo "$BUILD_DIR_UNIX/bin" >> $GITHUB_PATH
 
-          pythonroot="$(dirname ${{ inputs.python_exe }})"
-          pythonroot="$(cd "$pythonroot" && pwd)"
+          pythonroot="$(dirname "${{ inputs.python_exe }}")"
+          pythonroot=$(echo "$pythonroot" | tr '\\' '/' | sed 's/^\([A-Za-z]\):/\/\L\1/')
           echo "$pythonroot" >> $GITHUB_PATH
           echo "$pythonroot/DLLs" >> $GITHUB_PATH
           echo "$pythonroot/Lib" >> $GITHUB_PATH
 
-          echo "${{ inputs.sofa_root }}/plugins/SofaPython3/bin" >> $GITHUB_PATH
-          echo "SOFA_PLUGIN_PATH=${{ inputs.build_dir }}/bin" | tee -a $GITHUB_ENV
-          
+          echo "$SOFA_ROOT_UNIX/plugins/SofaPython3/bin" >> $GITHUB_PATH
+          echo "SOFA_PLUGIN_PATH=$BUILD_DIR_UNIX/bin" | tee -a $GITHUB_ENV
+          echo "SOFA_ROOT=$SOFA_ROOT_UNIX"  | tee -a $GITHUB_ENV
+           
         else
           echo "SOFA_PLUGIN_PATH=${{ inputs.build_dir }}/lib" | tee -a $GITHUB_ENV
+          echo "SOFA_ROOT=${{ inputs.sofa_root }}"  | tee -a $GITHUB_ENV
         fi
 
         if [[ "$RUNNER_OS" == "macOS" ]]; then
@@ -143,8 +152,6 @@ runs:
         if [[ "$RUNNER_OS" == "Linux" ]]; then
           echo "LD_LIBRARY_PATH=${{ inputs.build_dir }}/lib:${{ inputs.sofa_root }}/lib:${{ inputs.sofa_root }}/plugins/SofaPython3/lib:$LD_LIBRARY_PATH" | tee -a $GITHUB_ENV
         fi
-
-        echo "SOFA_ROOT=${{ inputs.sofa_root }}"  | tee -a $GITHUB_ENV
 
     - name: Install missing pip packages
       shell: bash
