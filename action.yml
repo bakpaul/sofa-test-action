@@ -90,31 +90,68 @@ runs:
       shell: bash
       run: |
 
-        if [[ ! -d "${{ inputs.output_dir }}" ]]; then
-            mkdir -p "${{ inputs.output_dir }}"
-        fi
 
 
         if [[ "$RUNNER_OS" == "Windows" ]]; then
           WORKSPACE_DIR=$(echo "${{ github.workspace }}" | tr '\\' '/' | sed 's/^\([A-Za-z]\):/\/\L\1/')
+          BUILD_DIR=$(echo "${{ inputs.build_dir }}" | tr '\\' '/' | sed 's/^\([A-Za-z]\):/\/\L\1/')
+          SRC_DIR=$(echo "${{ inputs.src_dir }}" | tr '\\' '/' | sed 's/^\([A-Za-z]\):/\/\L\1/')
+          SOFA_ROOT=$(echo "${{ inputs.sofa_root }}" | tr '\\' '/' | sed 's/^\([A-Za-z]\):/\/\L\1/')
         else
           WORKSPACE_DIR=$(cd "${{ github.workspace }}" && pwd)
+          BUILD_DIR=$(cd "${{ inputs.build_dir }}" && pwd)
+          SRC_DIR=$(cd "${{ inputs.src_dir }}" && pwd)
+          SOFA_ROOT=$(cd "${{ inputs.sofa_root }}" && pwd)
         fi
-        echo "WORKSPACE_DIR=$WORKSPACE_DIR" >> $GITHUB_ENV
+
+        OUTPUT_DIR=${{ inputs.output_dir }}
+        if [[ -z "$OUTPUT_DIR" ]]; then
+            OUTPUT_DIR="$WORKSPACE_DIR/output"
+        else
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            OUTPUT_DIR=$(echo "$OUTPUT_DIR" | tr '\\' '/' | sed 's/^\([A-Za-z]\):/\/\L\1/')
+          else
+            OUTPUT_DIR=$(cd "$OUTPUT_DIR" && pwd)
+          fi
+        fi
+
+        if [[ ! -d "$OUTPUT_DIR" ]]; then
+            mkdir -p "$OUTPUT_DIR"
+        fi
 
         CI_DIR=${{ inputs.ci_dir }}
         if [[ -z "$CI_DIR" ]]; then
             CI_DIR="$WORKSPACE_DIR/ci"
+        else
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            CI_DIR=$(echo "$CI_DIR" | tr '\\' '/' | sed 's/^\([A-Za-z]\):/\/\L\1/')
+          else
+            CI_DIR=$(cd "$CI_DIR" && pwd)
+          fi
         fi
-        echo "CI_DIR=$CI_DIR" >> $GITHUB_ENV
         
         REGRESSION_DIR=${{ inputs.regression_dir }}
         if [[ -z "$REGRESSION_DIR" ]]; then
             REGRESSION_DIR="$WORKSPACE_DIR/Regression"
+        else
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            REGRESSION_DIR=$(echo "$REGRESSION_DIR" | tr '\\' '/' | sed 's/^\([A-Za-z]\):/\/\L\1/')
+          else
+            REGRESSION_DIR=$(cd "$REGRESSION_DIR" && pwd)
+          fi
         fi
+
+        echo "WORKSPACE_DIR=$WORKSPACE_DIR" >> $GITHUB_ENV
+        echo "CI_DIR=$CI_DIR" >> $GITHUB_ENV
         echo "REGRESSION_DIR=$REGRESSION_DIR" >> $GITHUB_ENV
+        echo "BUILD_DIR=$BUILD_DIR" >> $GITHUB_ENV
+        echo "SRC_DIR=$SRC_DIR" >> $GITHUB_ENV
+        echo "OUTPUT_DIR=$OUTPUT_DIR" >> $GITHUB_ENV
+        echo "SOFA_ROOT=$SOFA_ROOT" >> $GITHUB_ENV
 
 
+
+        
         ##Install Regression release
         mkdir -p "${{ runner.temp }}/regression_tmp"
         curl --output "${{ runner.temp }}/regression_tmp/${RUNNER_OS}.zip" -L https://github.com/sofa-framework/regression/releases/download/release-master/Regression_test_master_for-SOFA-${{ inputs.sofa_version }}_${RUNNER_OS}.zip
@@ -124,11 +161,9 @@ runs:
         echo "REGRESSION_BINARY_DIR=$WORKSPACE_DIR/Regression_binaries/" >> $GITHUB_ENV
 
         if [[ "$RUNNER_OS" == "Windows" ]]; then
-          BUILD_DIR_UNIX=$(echo "${{ inputs.build_dir }}" | tr '\\' '/' | sed 's/^\([A-Za-z]\):/\/\L\1/')
-          SOFA_ROOT_UNIX=$(echo "${{ inputs.sofa_root }}" | tr '\\' '/' | sed 's/^\([A-Za-z]\):/\/\L\1/')
-          
-          echo "$BUILD_DIR_UNIX/lib" >> $GITHUB_PATH
-          echo "$BUILD_DIR_UNIX/bin" >> $GITHUB_PATH
+
+          echo "$BUILD_DIR/lib" >> $GITHUB_PATH
+          echo "$BUILD_DIR/bin" >> $GITHUB_PATH
 
           pythonroot="$(dirname "${{ inputs.python_exe }}")"
           pythonroot=$(echo "$pythonroot" | tr '\\' '/' | sed 's/^\([A-Za-z]\):/\/\L\1/')
@@ -136,21 +171,20 @@ runs:
           echo "$pythonroot/DLLs" >> $GITHUB_PATH
           echo "$pythonroot/Lib" >> $GITHUB_PATH
 
-          echo "$SOFA_ROOT_UNIX/plugins/SofaPython3/bin" >> $GITHUB_PATH
-          echo "SOFA_PLUGIN_PATH=$BUILD_DIR_UNIX/bin" | tee -a $GITHUB_ENV
-          echo "SOFA_ROOT=$SOFA_ROOT_UNIX"  | tee -a $GITHUB_ENV
+          echo "$SOFA_ROOT/plugins/SofaPython3/bin" >> $GITHUB_PATH
+          echo "SOFA_PLUGIN_PATH=$BUILD_DIR/bin" | tee -a $GITHUB_ENV
            
         else
-          echo "SOFA_PLUGIN_PATH=${{ inputs.build_dir }}/lib" | tee -a $GITHUB_ENV
-          echo "SOFA_ROOT=${{ inputs.sofa_root }}"  | tee -a $GITHUB_ENV
+          echo "SOFA_PLUGIN_PATH=$BUILD_DIR/lib" | tee -a $GITHUB_ENV
+          echo "SOFA_ROOT=$SOFA_ROOT"  | tee -a $GITHUB_ENV
         fi
 
         if [[ "$RUNNER_OS" == "macOS" ]]; then
-          echo "DYLD_LIBRARY_PATH=${{ inputs.build_dir }}/lib:${{ inputs.sofa_root }}/lib:${{ inputs.sofa_root }}/plugins/SofaPython3/lib:$DYLD_LIBRARY_PATH" | tee -a $GITHUB_ENV
+          echo "DYLD_LIBRARY_PATH=$BUILD_DIR/lib:$SOFA_ROOT/lib:$SOFA_ROOT/plugins/SofaPython3/lib:$DYLD_LIBRARY_PATH" | tee -a $GITHUB_ENV
         fi
 
         if [[ "$RUNNER_OS" == "Linux" ]]; then
-          echo "LD_LIBRARY_PATH=${{ inputs.build_dir }}/lib:${{ inputs.sofa_root }}/lib:${{ inputs.sofa_root }}/plugins/SofaPython3/lib:$LD_LIBRARY_PATH" | tee -a $GITHUB_ENV
+          echo "LD_LIBRARY_PATH=$BUILD_DIR/lib:$SOFA_ROOT/lib:$SOFA_ROOT/plugins/SofaPython3/lib:$LD_LIBRARY_PATH" | tee -a $GITHUB_ENV
         fi
 
     - name: Install missing pip packages
@@ -162,38 +196,38 @@ runs:
       if: always() && inputs.run_unit_tests == 'true'
       shell: bash
       run: |
-        /bin/bash "$CI_DIR/scripts/unit-tests.sh" run unit "${{ inputs.build_dir }}" "${{ inputs.src_dir }}" "${{ inputs.output_dir }}" ${{ inputs.nb_parallel_threads }}
-        /bin/bash "$CI_DIR/scripts/unit-tests.sh" print-summary unit "${{ inputs.build_dir }}" "${{ inputs.src_dir }}" "${{ inputs.output_dir }}" ${{ inputs.nb_parallel_threads }}
+        /bin/bash "$CI_DIR/scripts/unit-tests.sh" run unit "$BUILD_DIR" "$SRC_DIR" "$OUTPUT_DIR" ${{ inputs.nb_parallel_threads }}
+        /bin/bash "$CI_DIR/scripts/unit-tests.sh" print-summary unit "$BUILD_DIR" "$SRC_DIR" "$OUTPUT_DIR" ${{ inputs.nb_parallel_threads }}
 
-        echo "tests_suites=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-test-suites unit ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }})" > ${{ inputs.output_dir }}/unit-tests/unit-tests_results.txt
-        echo "tests_total=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-tests unit ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }})" >> ${{ inputs.output_dir }}/unit-tests/unit-tests_results.txt
-        echo "tests_disabled=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-disabled unit ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }})" >> ${{ inputs.output_dir }}/unit-tests/unit-tests_results.txt
-        echo "tests_failures=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-failures unit ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }})" >> ${{ inputs.output_dir }}/unit-tests/unit-tests_results.txt
-        echo "tests_errors=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-errors unit ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }})" >> ${{ inputs.output_dir }}/unit-tests/unit-tests_results.txt
-        echo "tests_duration=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-durations unit ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }})" >> ${{ inputs.output_dir }}/unit-tests/unit-tests_results.txt
+        echo "tests_suites=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-test-suites unit $BUILD_DIR $SRC_DIR $OUTPUT_DIR)" > $OUTPUT_DIR/unit-tests/unit-tests_results.txt
+        echo "tests_total=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-tests unit $BUILD_DIR $SRC_DIR $OUTPUT_DIR)" >> $OUTPUT_DIR/unit-tests/unit-tests_results.txt
+        echo "tests_disabled=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-disabled unit $BUILD_DIR $SRC_DIR $OUTPUT_DIR)" >> $OUTPUT_DIR/unit-tests/unit-tests_results.txt
+        echo "tests_failures=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-failures unit $BUILD_DIR $SRC_DIR $OUTPUT_DIR)" >> $OUTPUT_DIR/unit-tests/unit-tests_results.txt
+        echo "tests_errors=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-errors unit $BUILD_DIR $SRC_DIR $OUTPUT_DIR)" >> $OUTPUT_DIR/unit-tests/unit-tests_results.txt
+        echo "tests_duration=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-durations unit $BUILD_DIR $SRC_DIR $OUTPUT_DIR)" >> $OUTPUT_DIR/unit-tests/unit-tests_results.txt
         
-        python3 "$CI_DIR/scripts/exctractErrorFromXML.py" "${{ inputs.output_dir }}/unit-tests/reports" "${{ inputs.output_dir }}/unit-tests"
+        python3 "$CI_DIR/scripts/exctractErrorFromXML.py" "$OUTPUT_DIR/unit-tests/reports" "$OUTPUT_DIR/unit-tests"
 
 
     - name: Launch scene tests
       if: always() && inputs.run_scene_tests == 'true'
       shell: bash
       run: |
-        /bin/bash "$CI_DIR/scripts/scene-tests.sh" run "${{ inputs.sofa_root }}" "${{ inputs.src_dir }}" "${{ inputs.output_dir }}" ${{ inputs.nb_parallel_threads }}
-        /bin/bash "$CI_DIR/scripts/scene-tests.sh" print-summary "${{ inputs.sofa_root }}" "${{ inputs.src_dir }}" "${{ inputs.output_dir }}" ${{ inputs.nb_parallel_threads }}
+        /bin/bash "$CI_DIR/scripts/scene-tests.sh" run "${{ inputs.sofa_root }}" "$SRC_DIR" "$OUTPUT_DIR" ${{ inputs.nb_parallel_threads }}
+        /bin/bash "$CI_DIR/scripts/scene-tests.sh" print-summary "${{ inputs.sofa_root }}" "$SRC_DIR" "$OUTPUT_DIR" ${{ inputs.nb_parallel_threads }}
 
-        echo "scenes_total=$(/bin/bash $CI_DIR/scripts/scene-tests.sh count-tested-scenes ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }})" > ${{ inputs.output_dir }}/scene-tests/scene-tests_results.txt
-        echo "scenes_successes=$(/bin/bash "$CI_DIR/scripts/scene-tests.sh" count-successes ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }})" >> ${{ inputs.output_dir }}/scene-tests/scene-tests_results.txt
-        echo "scenes_errors=$(/bin/bash "$CI_DIR/scripts/scene-tests.sh" count-errors ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }})" >> ${{ inputs.output_dir }}/scene-tests/scene-tests_results.txt
-        echo "scenes_crashes=$(/bin/bash "$CI_DIR/scripts/scene-tests.sh" count-crashes ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }})" >> ${{ inputs.output_dir }}/scene-tests/scene-tests_results.txt
-        echo "scenes_duration=$(/bin/bash "$CI_DIR/scripts/scene-tests.sh" count-durations ${{ inputs.build_dir }} ${{ inputs.src_dir }} ${{ inputs.output_dir }})" >> ${{ inputs.output_dir }}/scene-tests/scene-tests_results.txt
+        echo "scenes_total=$(/bin/bash $CI_DIR/scripts/scene-tests.sh count-tested-scenes $BUILD_DIR $SRC_DIR $OUTPUT_DIR)" > $OUTPUT_DIR/scene-tests/scene-tests_results.txt
+        echo "scenes_successes=$(/bin/bash "$CI_DIR/scripts/scene-tests.sh" count-successes $BUILD_DIR $SRC_DIR $OUTPUT_DIR)" >> $OUTPUT_DIR/scene-tests/scene-tests_results.txt
+        echo "scenes_errors=$(/bin/bash "$CI_DIR/scripts/scene-tests.sh" count-errors $BUILD_DIR $SRC_DIR $OUTPUT_DIR)" >> $OUTPUT_DIR/scene-tests/scene-tests_results.txt
+        echo "scenes_crashes=$(/bin/bash "$CI_DIR/scripts/scene-tests.sh" count-crashes $BUILD_DIR $SRC_DIR $OUTPUT_DIR)" >> $OUTPUT_DIR/scene-tests/scene-tests_results.txt
+        echo "scenes_duration=$(/bin/bash "$CI_DIR/scripts/scene-tests.sh" count-durations $BUILD_DIR $SRC_DIR $OUTPUT_DIR)" >> $OUTPUT_DIR/scene-tests/scene-tests_results.txt
 
 
-        if [[ -f "${{ inputs.output_dir }}/scene-tests/reports/crashes.txt" && "$(cat "${{ inputs.output_dir }}/scene-tests/reports/crashes.txt")" != "" ]]; then
-            cp ${{ inputs.output_dir }}/scene-tests/reports/crashes.txt ${{ inputs.output_dir }}/scene-tests_crashes
+        if [[ -f "$OUTPUT_DIR/scene-tests/reports/crashes.txt" && "$(cat "$OUTPUT_DIR/scene-tests/reports/crashes.txt")" != "" ]]; then
+            cp $OUTPUT_DIR/scene-tests/reports/crashes.txt $OUTPUT_DIR/scene-tests_crashes
         fi
-        if [[ -f "${{ inputs.output_dir }}/scene-tests/reports/errors.txt" && "$(cat "${{ inputs.output_dir }}/scene-tests/reports/errors.txt")" != "" ]]; then
-            cp ${{ inputs.output_dir }}/scene-tests/reports/errors.txt ${{ inputs.output_dir }}/scene-tests_errors
+        if [[ -f "$OUTPUT_DIR/scene-tests/reports/errors.txt" && "$(cat "$OUTPUT_DIR/scene-tests/reports/errors.txt")" != "" ]]; then
+            cp $OUTPUT_DIR/scene-tests/reports/errors.txt $OUTPUT_DIR/scene-tests_errors
         fi
 
 
@@ -201,17 +235,17 @@ runs:
       if: always() && inputs.run_regression_tests == 'true'
       shell: bash
       run: |
-        /bin/bash "$CI_DIR/scripts/unit-tests.sh" run regression "$REGRESSION_BINARY_DIR" "${{ inputs.src_dir }}" "${{ inputs.output_dir }}" ${{ inputs.nb_parallel_threads }}
-        /bin/bash "$CI_DIR/scripts/unit-tests.sh" print-summary regression "$REGRESSION_BINARY_DIR" "${{ inputs.src_dir }}" "${{ inputs.output_dir }}" ${{ inputs.nb_parallel_threads }}
+        /bin/bash "$CI_DIR/scripts/unit-tests.sh" run regression "$REGRESSION_BINARY_DIR" "$SRC_DIR" "$OUTPUT_DIR" ${{ inputs.nb_parallel_threads }}
+        /bin/bash "$CI_DIR/scripts/unit-tests.sh" print-summary regression "$REGRESSION_BINARY_DIR" "$SRC_DIR" "$OUTPUT_DIR" ${{ inputs.nb_parallel_threads }}
 
-        echo "regressions_suites=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-test-suites regression $REGRESSION_BINARY_DIR ${{ inputs.src_dir }} ${{ inputs.output_dir }} )" > ${{ inputs.output_dir }}/regression-tests/regression-tests_results.txt
-        echo "regressions_total=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-tests regression $REGRESSION_BINARY_DIR ${{ inputs.src_dir }} ${{ inputs.output_dir }} )" >> ${{ inputs.output_dir }}/regression-tests/regression-tests_results.txt
-        echo "regressions_disabled=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-disabled regression $REGRESSION_BINARY_DIR ${{ inputs.src_dir }} ${{ inputs.output_dir }} )" >> ${{ inputs.output_dir }}/regression-tests/regression-tests_results.txt
-        echo "regressions_failures=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-failures regression $REGRESSION_BINARY_DIR ${{ inputs.src_dir }} ${{ inputs.output_dir }} )" >> ${{ inputs.output_dir }}/regression-tests/regression-tests_results.txt
-        echo "regressions_errors=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-errors regression $REGRESSION_BINARY_DIR ${{ inputs.src_dir }} ${{ inputs.output_dir }} )" >> ${{ inputs.output_dir }}/regression-tests/regression-tests_results.txt
-        echo "regressions_duration=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-durations regression $REGRESSION_BINARY_DIR ${{ inputs.src_dir }} ${{ inputs.output_dir }} )" >> ${{ inputs.output_dir }}/regression-tests/regression-tests_results.txt
+        echo "regressions_suites=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-test-suites regression $REGRESSION_BINARY_DIR $SRC_DIR $OUTPUT_DIR )" > $OUTPUT_DIR/regression-tests/regression-tests_results.txt
+        echo "regressions_total=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-tests regression $REGRESSION_BINARY_DIR $SRC_DIR $OUTPUT_DIR )" >> $OUTPUT_DIR/regression-tests/regression-tests_results.txt
+        echo "regressions_disabled=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-disabled regression $REGRESSION_BINARY_DIR $SRC_DIR $OUTPUT_DIR )" >> $OUTPUT_DIR/regression-tests/regression-tests_results.txt
+        echo "regressions_failures=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-failures regression $REGRESSION_BINARY_DIR $SRC_DIR $OUTPUT_DIR )" >> $OUTPUT_DIR/regression-tests/regression-tests_results.txt
+        echo "regressions_errors=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-errors regression $REGRESSION_BINARY_DIR $SRC_DIR $OUTPUT_DIR )" >> $OUTPUT_DIR/regression-tests/regression-tests_results.txt
+        echo "regressions_duration=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-durations regression $REGRESSION_BINARY_DIR $SRC_DIR $OUTPUT_DIR )" >> $OUTPUT_DIR/regression-tests/regression-tests_results.txt
  
-        python3 "$CI_DIR/scripts/exctractErrorFromXML.py" "${{ inputs.output_dir }}/regression-tests/reports" "${{ inputs.output_dir }}/regression-tests"
+        python3 "$CI_DIR/scripts/exctractErrorFromXML.py" "$OUTPUT_DIR/regression-tests/reports" "$OUTPUT_DIR/regression-tests"
 
 
     - name: Publish tests logs
@@ -227,10 +261,10 @@ runs:
     - name: Summarize tests results
       shell: bash
       run: |
-        if [[ "$(cd "${{ inputs.output_dir }}" && find . -maxdepth 1 -type f)" != "" ]]; then
+        if [[ "$(cd "$OUTPUT_DIR" && find . -maxdepth 1 -type f)" != "" ]]; then
           echo "❌ Tests have resulted in : "
           echo ""
-          python3 $CI_DIR/scripts/generate-tests-table.py "${{ inputs.output_dir }}"
+          python3 $CI_DIR/scripts/generate-tests-table.py "$OUTPUT_DIR"
           echo ""
           echo "#----------------------------------------#"
           echo "#---------------Quick Logs---------------#"
@@ -239,12 +273,12 @@ runs:
             do 
               for errorType in 'errors' 'crashes' 'failures';
               do
-                if [ -f "${{ inputs.output_dir }}/${testType}-tests_${errorType}" ]; then 
+                if [ -f "$OUTPUT_DIR/${testType}-tests_${errorType}" ]; then 
                   capitalized="$(echo "${testType:0:1}" | tr '[:lower:]' '[:upper:]')${testType:1}"
                   echo ""
                   echo -e "${bold}${capitalized} ${errorType}:${normal}"
                   echo ""
-                  cat "${{ inputs.output_dir }}/${testType}-tests_${errorType}"
+                  cat "$OUTPUT_DIR/${testType}-tests_${errorType}"
                   echo ""
                   echo "#----------------------------------------#"
                 fi
@@ -259,6 +293,6 @@ runs:
         else
           echo "✅ Tests where successful : "
           echo ""
-          python3 $CI_DIR/scripts/generate-tests-table.py "${{ inputs.output_dir }}/"
+          python3 $CI_DIR/scripts/generate-tests-table.py "$OUTPUT_DIR/"
           echo ""
         fi
