@@ -213,6 +213,7 @@ runs:
       if: always() && inputs.run_unit_tests == 'true'
       shell: bash
       run: |
+        echo "Launching \" /bin/bash \"$CI_DIR/scripts/unit-tests.sh\" run unit \"$BUILD_DIR\" \"$SRC_DIR\" \"$OUTPUT_DIR\" ${{ inputs.nb_parallel_threads }}\""
         /bin/bash "$CI_DIR/scripts/unit-tests.sh" run unit "$BUILD_DIR" "$SRC_DIR" "$OUTPUT_DIR" ${{ inputs.nb_parallel_threads }}
         /bin/bash "$CI_DIR/scripts/unit-tests.sh" print-summary unit "$BUILD_DIR" "$SRC_DIR" "$OUTPUT_DIR" ${{ inputs.nb_parallel_threads }}
 
@@ -230,8 +231,9 @@ runs:
       if: always() && inputs.run_scene_tests == 'true'
       shell: bash
       run: |
-        /bin/bash "$CI_DIR/scripts/scene-tests.sh" run "${{ inputs.sofa_root }}" "$SRC_DIR" "$OUTPUT_DIR" ${{ inputs.nb_parallel_threads }}
-        /bin/bash "$CI_DIR/scripts/scene-tests.sh" print-summary "${{ inputs.sofa_root }}" "$SRC_DIR" "$OUTPUT_DIR" ${{ inputs.nb_parallel_threads }}
+        echo "Launching \" /bin/bash \"$CI_DIR/scripts/scene-tests.sh\" run \"$SOFA_ROOT\" \"$SRC_DIR\" \"$OUTPUT_DIR\" ${{ inputs.nb_parallel_threads }}\""
+        /bin/bash "$CI_DIR/scripts/scene-tests.sh" run "$SOFA_ROOT" "$SRC_DIR" "$OUTPUT_DIR" ${{ inputs.nb_parallel_threads }}
+        /bin/bash "$CI_DIR/scripts/scene-tests.sh" print-summary "$SOFA_ROOT" "$SRC_DIR" "$OUTPUT_DIR" ${{ inputs.nb_parallel_threads }}
 
         echo "scenes_total=$(/bin/bash $CI_DIR/scripts/scene-tests.sh count-tested-scenes $BUILD_DIR $SRC_DIR $OUTPUT_DIR)" > $OUTPUT_DIR/scene-tests/scene-tests_results.txt
         echo "scenes_successes=$(/bin/bash "$CI_DIR/scripts/scene-tests.sh" count-successes $BUILD_DIR $SRC_DIR $OUTPUT_DIR)" >> $OUTPUT_DIR/scene-tests/scene-tests_results.txt
@@ -252,6 +254,7 @@ runs:
       if: always() && inputs.run_regression_tests == 'true'
       shell: bash
       run: |
+        echo "Launching \" /bin/bash \"$CI_DIR/scripts/unit-tests.sh\" run regression \"$REGRESSION_BINARY_DIR\" \"$SRC_DIR\" \"$OUTPUT_DIR\" ${{ inputs.nb_parallel_threads }}\""
         /bin/bash "$CI_DIR/scripts/unit-tests.sh" run regression "$REGRESSION_BINARY_DIR" "$SRC_DIR" "$OUTPUT_DIR" ${{ inputs.nb_parallel_threads }}
         /bin/bash "$CI_DIR/scripts/unit-tests.sh" print-summary regression "$REGRESSION_BINARY_DIR" "$SRC_DIR" "$OUTPUT_DIR" ${{ inputs.nb_parallel_threads }}
 
