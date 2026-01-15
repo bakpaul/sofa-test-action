@@ -9,6 +9,14 @@ This is a GitHub Action for setting up and running tests for SOFA framework plug
 - Runs unit tests, scene tests, and regression tests
 - Handles test reporting and artifact publishing
 
+### Github command
+
+The work developped must be pushed on bakpaul remote using
+
+```bash
+git push bakpaul wip_first_attempt
+```
+
 ## Build/Lint/Test Commands
 
 ### Running Tests
