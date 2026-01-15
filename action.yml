@@ -214,12 +214,17 @@ runs:
           done
         fi
         
-        if [[ "$RUNNER_OS" == "Windows" ]]; then
-          # On Windows, use semicolon as path separator instead of colon
-          echo "PYTHONPATH=$SOFA_PYTHON_PATH;$PYTHONPATH" | tee -a $GITHUB_ENV
-        else
-          echo "PYTHONPATH=$SOFA_PYTHON_PATH:$PYTHONPATH" | tee -a $GITHUB_ENV
-        fi
+         if [[ "$RUNNER_OS" == "Windows" ]]; then
+           # On Windows, use semicolon as path separator instead of colon
+           # Only add semicolon if PYTHONPATH is not empty
+           if [[ -n "$PYTHONPATH" ]]; then
+             echo "PYTHONPATH=$SOFA_PYTHON_PATH;$PYTHONPATH" | tee -a $GITHUB_ENV
+           else
+             echo "PYTHONPATH=$SOFA_PYTHON_PATH" | tee -a $GITHUB_ENV
+           fi
+         else
+           echo "PYTHONPATH=$SOFA_PYTHON_PATH:$PYTHONPATH" | tee -a $GITHUB_ENV
+         fi
 
     - name: Install missing pip packages
       shell: bash
