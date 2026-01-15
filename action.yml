@@ -97,52 +97,33 @@ runs:
           BUILD_DIR=$(echo "${{ inputs.build_dir }}" | tr '\\' '/' | sed 's/^\([A-Za-z]\):/\/\L\1/')
           SRC_DIR=$(echo "${{ inputs.src_dir }}" | tr '\\' '/' | sed 's/^\([A-Za-z]\):/\/\L\1/')
           SOFA_ROOT=$(echo "${{ inputs.sofa_root }}" | tr '\\' '/' | sed 's/^\([A-Za-z]\):/\/\L\1/')
+          OUTPUT_DIR=$(echo "${{ inputs.output_dir }}" | tr '\\' '/' | sed 's/^\([A-Za-z]\):/\/\L\1/')
+          CI_DIR=$(echo "${{ inputs.ci_dir }}" | tr '\\' '/' | sed 's/^\([A-Za-z]\):/\/\L\1/')
+          REGRESSION_DIR=$(echo "${{ inputs.regression_dir }}" | tr '\\' '/' | sed 's/^\([A-Za-z]\):/\/\L\1/')
         else
-          WORKSPACE_DIR=$(cd "${{ github.workspace }}" && pwd)
-          BUILD_DIR=$(cd "${{ inputs.build_dir }}" && pwd)
-          SRC_DIR=$(cd "${{ inputs.src_dir }}" && pwd)
-          SOFA_ROOT=$(cd "${{ inputs.sofa_root }}" && pwd)
+          WORKSPACE_DIR="${{ github.workspace }}"
+          BUILD_DIR="${{ inputs.build_dir }}"
+          SRC_DIR="${{ inputs.src_dir }}"
+          SOFA_ROOT="${{ inputs.sofa_root }}"
+          OUTPUT_DIR="${{ inputs.output_dir }}"
+          CI_DIR="${{ inputs.ci_dir }}"
+          REGRESSION_DIR="${{ inputs.regression_dir }}"
+
         fi
 
-        OUTPUT_DIR=${{ inputs.output_dir }}
         if [[ -z "$OUTPUT_DIR" ]]; then
             OUTPUT_DIR="$WORKSPACE_DIR/output"
-        else
-          if [[ "$RUNNER_OS" == "Windows" ]]; then
-            OUTPUT_DIR=$(echo "$OUTPUT_DIR" | tr '\\' '/' | sed 's/^\([A-Za-z]\):/\/\L\1/')
-            if [[ ! -d "$OUTPUT_DIR" ]]; then
-                mkdir -p "$OUTPUT_DIR"
-            fi
-          else
-            if [[ ! -d "$OUTPUT_DIR" ]]; then
-                mkdir -p "$OUTPUT_DIR"
-            fi
-            OUTPUT_DIR=$(cd "$OUTPUT_DIR" && pwd)
-          fi
+        fi
+        if [[ ! -d "$OUTPUT_DIR" ]]; then
+            mkdir -p "$OUTPUT_DIR"
         fi
 
-
-
-        CI_DIR=${{ inputs.ci_dir }}
         if [[ -z "$CI_DIR" ]]; then
             CI_DIR="$WORKSPACE_DIR/ci"
-        else
-          if [[ "$RUNNER_OS" == "Windows" ]]; then
-            CI_DIR=$(echo "$CI_DIR" | tr '\\' '/' | sed 's/^\([A-Za-z]\):/\/\L\1/')
-          else
-            CI_DIR=$(cd "$CI_DIR" && pwd)
-          fi
         fi
-        
-        REGRESSION_DIR=${{ inputs.regression_dir }}
+
         if [[ -z "$REGRESSION_DIR" ]]; then
             REGRESSION_DIR="$WORKSPACE_DIR/Regression"
-        else
-          if [[ "$RUNNER_OS" == "Windows" ]]; then
-            REGRESSION_DIR=$(echo "$REGRESSION_DIR" | tr '\\' '/' | sed 's/^\([A-Za-z]\):/\/\L\1/')
-          else
-            REGRESSION_DIR=$(cd "$REGRESSION_DIR" && pwd)
-          fi
         fi
 
         echo "WORKSPACE_DIR=$WORKSPACE_DIR" >> $GITHUB_ENV
@@ -152,9 +133,6 @@ runs:
         echo "SRC_DIR=$SRC_DIR" >> $GITHUB_ENV
         echo "OUTPUT_DIR=$OUTPUT_DIR" >> $GITHUB_ENV
         echo "SOFA_ROOT=$SOFA_ROOT" >> $GITHUB_ENV
-
-
-
         
         ##Install Regression release
         mkdir -p "${{ runner.temp }}/regression_tmp"
