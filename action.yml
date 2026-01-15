@@ -215,7 +215,6 @@ runs:
         fi
         
         if [[ "$RUNNER_OS" == "Windows" ]]; then
-          SOFA_PYTHON_PATH=$(echo "$SOFA_PYTHON_PATH" | tr '\\' '/' | sed 's/^\\([A-Za-z]\):/\/\\L\1/')
           # On Windows, use semicolon as path separator instead of colon
           echo "PYTHONPATH=$SOFA_PYTHON_PATH;$PYTHONPATH" | tee -a $GITHUB_ENV
         else
