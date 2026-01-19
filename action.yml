@@ -98,6 +98,7 @@ runs:
           SRC_DIR=$(echo "${{ inputs.src_dir }}" | tr '\\' '/' | sed 's/^\([A-Za-z]\):/\/\L\1/')
           SOFA_ROOT=$(echo "${{ inputs.sofa_root }}" | tr '\\' '/' | sed 's/^\([A-Za-z]\):/\/\L\1/')
           OUTPUT_DIR=$(echo "${{ inputs.output_dir }}" | tr '\\' '/' | sed 's/^\([A-Za-z]\):/\/\L\1/')
+          OUTPUT_DIR_FOR_GTEST=$(echo "${{ inputs.output_dir }}" | tr '\\' '/')
           CI_DIR=$(echo "${{ inputs.ci_dir }}" | tr '\\' '/' | sed 's/^\([A-Za-z]\):/\/\L\1/')
           REGRESSION_DIR=$(echo "${{ inputs.regression_dir }}" | tr '\\' '/' | sed 's/^\([A-Za-z]\):/\/\L\1/')
         else
@@ -106,6 +107,7 @@ runs:
           SRC_DIR="${{ inputs.src_dir }}"
           SOFA_ROOT="${{ inputs.sofa_root }}"
           OUTPUT_DIR="${{ inputs.output_dir }}"
+          OUTPUT_DIR_FOR_GTEST=$OUTPUT_DIR
           CI_DIR="${{ inputs.ci_dir }}"
           REGRESSION_DIR="${{ inputs.regression_dir }}"
 
@@ -132,6 +134,7 @@ runs:
         echo "BUILD_DIR=$BUILD_DIR" >> $GITHUB_ENV
         echo "SRC_DIR=$SRC_DIR" >> $GITHUB_ENV
         echo "OUTPUT_DIR=$OUTPUT_DIR" >> $GITHUB_ENV
+        echo "OUTPUT_DIR_FOR_GTEST=$OUTPUT_DIR_FOR_GTEST" >> $GITHUB_ENV
         echo "SOFA_ROOT=$SOFA_ROOT" >> $GITHUB_ENV
         
         ##Install Regression release
@@ -213,16 +216,18 @@ runs:
       if: always() && inputs.run_unit_tests == 'true'
       shell: bash
       run: |
-        echo "Launching \" /bin/bash \"$CI_DIR/scripts/unit-tests.sh\" run unit \"$BUILD_DIR\" \"$SRC_DIR\" \"$OUTPUT_DIR\" ${{ inputs.nb_parallel_threads }}\""
-        /bin/bash "$CI_DIR/scripts/unit-tests.sh" run unit "$BUILD_DIR" "$SRC_DIR" "$OUTPUT_DIR" ${{ inputs.nb_parallel_threads }}
-        /bin/bash "$CI_DIR/scripts/unit-tests.sh" print-summary unit "$BUILD_DIR" "$SRC_DIR" "$OUTPUT_DIR" ${{ inputs.nb_parallel_threads }}
 
-        echo "tests_suites=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-test-suites unit $BUILD_DIR $SRC_DIR $OUTPUT_DIR)" > $OUTPUT_DIR/unit-tests/unit-tests_results.txt
-        echo "tests_total=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-tests unit $BUILD_DIR $SRC_DIR $OUTPUT_DIR)" >> $OUTPUT_DIR/unit-tests/unit-tests_results.txt
-        echo "tests_disabled=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-disabled unit $BUILD_DIR $SRC_DIR $OUTPUT_DIR)" >> $OUTPUT_DIR/unit-tests/unit-tests_results.txt
-        echo "tests_failures=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-failures unit $BUILD_DIR $SRC_DIR $OUTPUT_DIR)" >> $OUTPUT_DIR/unit-tests/unit-tests_results.txt
-        echo "tests_errors=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-errors unit $BUILD_DIR $SRC_DIR $OUTPUT_DIR)" >> $OUTPUT_DIR/unit-tests/unit-tests_results.txt
-        echo "tests_duration=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-durations unit $BUILD_DIR $SRC_DIR $OUTPUT_DIR)" >> $OUTPUT_DIR/unit-tests/unit-tests_results.txt
+
+        echo "Launching \" /bin/bash \"$CI_DIR/scripts/unit-tests.sh\" run unit \"$BUILD_DIR\" \"$SRC_DIR\" \"$OUTPUT_DIR_FOR_GTEST\" ${{ inputs.nb_parallel_threads }}\""
+        /bin/bash "$CI_DIR/scripts/unit-tests.sh" run unit "$BUILD_DIR" "$SRC_DIR" "$OUTPUT_DIR_FOR_GTEST" ${{ inputs.nb_parallel_threads }}
+        /bin/bash "$CI_DIR/scripts/unit-tests.sh" print-summary unit "$BUILD_DIR" "$SRC_DIR" "$OUTPUT_DIR_FOR_GTEST" ${{ inputs.nb_parallel_threads }}
+
+        echo "tests_suites=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-test-suites unit $BUILD_DIR $SRC_DIR $OUTPUT_DIR_FOR_GTEST)" > $OUTPUT_DIR/unit-tests/unit-tests_results.txt
+        echo "tests_total=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-tests unit $BUILD_DIR $SRC_DIR $OUTPUT_DIR_FOR_GTEST)" >> $OUTPUT_DIR/unit-tests/unit-tests_results.txt
+        echo "tests_disabled=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-disabled unit $BUILD_DIR $SRC_DIR $OUTPUT_DIR_FOR_GTEST)" >> $OUTPUT_DIR/unit-tests/unit-tests_results.txt
+        echo "tests_failures=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-failures unit $BUILD_DIR $SRC_DIR $OUTPUT_DIR_FOR_GTEST)" >> $OUTPUT_DIR/unit-tests/unit-tests_results.txt
+        echo "tests_errors=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-errors unit $BUILD_DIR $SRC_DIR $OUTPUT_DIR_FOR_GTEST)" >> $OUTPUT_DIR/unit-tests/unit-tests_results.txt
+        echo "tests_duration=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-durations unit $BUILD_DIR $SRC_DIR $OUTPUT_DIR_FOR_GTEST)" >> $OUTPUT_DIR/unit-tests/unit-tests_results.txt
         
         python3 "$CI_DIR/scripts/exctractErrorFromXML.py" "$OUTPUT_DIR/unit-tests/reports" "$OUTPUT_DIR/unit-tests"
 
@@ -254,16 +259,16 @@ runs:
       if: always() && inputs.run_regression_tests == 'true'
       shell: bash
       run: |
-        echo "Launching \" /bin/bash \"$CI_DIR/scripts/unit-tests.sh\" run regression \"$REGRESSION_BINARY_DIR\" \"$SRC_DIR\" \"$OUTPUT_DIR\" ${{ inputs.nb_parallel_threads }}\""
-        /bin/bash "$CI_DIR/scripts/unit-tests.sh" run regression "$REGRESSION_BINARY_DIR" "$SRC_DIR" "$OUTPUT_DIR" ${{ inputs.nb_parallel_threads }}
-        /bin/bash "$CI_DIR/scripts/unit-tests.sh" print-summary regression "$REGRESSION_BINARY_DIR" "$SRC_DIR" "$OUTPUT_DIR" ${{ inputs.nb_parallel_threads }}
+        echo "Launching \" /bin/bash \"$CI_DIR/scripts/unit-tests.sh\" run regression \"$REGRESSION_BINARY_DIR\" \"$SRC_DIR\" \"$OUTPUT_DIR_FOR_GTEST\" ${{ inputs.nb_parallel_threads }}\""
+        /bin/bash "$CI_DIR/scripts/unit-tests.sh" run regression "$REGRESSION_BINARY_DIR" "$SRC_DIR" "$OUTPUT_DIR_FOR_GTEST" ${{ inputs.nb_parallel_threads }}
+        /bin/bash "$CI_DIR/scripts/unit-tests.sh" print-summary regression "$REGRESSION_BINARY_DIR" "$SRC_DIR" "$OUTPUT_DIR_FOR_GTEST" ${{ inputs.nb_parallel_threads }}
 
-        echo "regressions_suites=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-test-suites regression $REGRESSION_BINARY_DIR $SRC_DIR $OUTPUT_DIR )" > $OUTPUT_DIR/regression-tests/regression-tests_results.txt
-        echo "regressions_total=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-tests regression $REGRESSION_BINARY_DIR $SRC_DIR $OUTPUT_DIR )" >> $OUTPUT_DIR/regression-tests/regression-tests_results.txt
-        echo "regressions_disabled=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-disabled regression $REGRESSION_BINARY_DIR $SRC_DIR $OUTPUT_DIR )" >> $OUTPUT_DIR/regression-tests/regression-tests_results.txt
-        echo "regressions_failures=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-failures regression $REGRESSION_BINARY_DIR $SRC_DIR $OUTPUT_DIR )" >> $OUTPUT_DIR/regression-tests/regression-tests_results.txt
-        echo "regressions_errors=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-errors regression $REGRESSION_BINARY_DIR $SRC_DIR $OUTPUT_DIR )" >> $OUTPUT_DIR/regression-tests/regression-tests_results.txt
-        echo "regressions_duration=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-durations regression $REGRESSION_BINARY_DIR $SRC_DIR $OUTPUT_DIR )" >> $OUTPUT_DIR/regression-tests/regression-tests_results.txt
+        echo "regressions_suites=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-test-suites regression $REGRESSION_BINARY_DIR $SRC_DIR $OUTPUT_DIR_FOR_GTEST )" > $OUTPUT_DIR/regression-tests/regression-tests_results.txt
+        echo "regressions_total=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-tests regression $REGRESSION_BINARY_DIR $SRC_DIR $OUTPUT_DIR_FOR_GTEST )" >> $OUTPUT_DIR/regression-tests/regression-tests_results.txt
+        echo "regressions_disabled=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-disabled regression $REGRESSION_BINARY_DIR $SRC_DIR $OUTPUT_DIR_FOR_GTEST )" >> $OUTPUT_DIR/regression-tests/regression-tests_results.txt
+        echo "regressions_failures=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-failures regression $REGRESSION_BINARY_DIR $SRC_DIR $OUTPUT_DIR_FOR_GTEST )" >> $OUTPUT_DIR/regression-tests/regression-tests_results.txt
+        echo "regressions_errors=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-errors regression $REGRESSION_BINARY_DIR $SRC_DIR $OUTPUT_DIR_FOR_GTEST )" >> $OUTPUT_DIR/regression-tests/regression-tests_results.txt
+        echo "regressions_duration=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-durations regression $REGRESSION_BINARY_DIR $SRC_DIR $OUTPUT_DIR_FOR_GTEST )" >> $OUTPUT_DIR/regression-tests/regression-tests_results.txt
  
         python3 "$CI_DIR/scripts/exctractErrorFromXML.py" "$OUTPUT_DIR/regression-tests/reports" "$OUTPUT_DIR/regression-tests"
 
