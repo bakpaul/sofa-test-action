@@ -151,7 +151,7 @@ runs:
           #little bit of debug
           find "$WORKSPACE_DIR/Regression_test_master_for-SOFA-${{ inputs.sofa_version }}_${RUNNER_OS}/" -print | sed -e 's;[^/]*/;|____;g;s;____|;  |;g'
 
-          mv "$WORKSPACE_DIR/Regression_test_master_for-SOFA-${{ inputs.sofa_version }}_${RUNNER_OS}/bin/*" "$SOFA_ROOT/bin/"
+          mv "$WORKSPACE_DIR/Regression_test_master_for-SOFA-${{ inputs.sofa_version }}_${RUNNER_OS}"/bin/* "$SOFA_ROOT/bin/"
         fi
 
         chmod +x $SOFA_ROOT/bin/Regression_*
