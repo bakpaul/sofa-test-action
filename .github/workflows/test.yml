@@ -31,8 +31,8 @@ jobs:
         with:
           repository: 'sofa-framework/BeamAdapter'
           ref: 'master'
-          path: ${{ env.WORKSPACE_SRC_PATH }}        
-      
+          path: ${{ env.WORKSPACE_SRC_PATH }}
+
       - name: Build and install
         shell: bash
         run: |
@@ -63,8 +63,8 @@ jobs:
           fi
 
 
-      - name: Launch test 
-        uses: bakpaul/sofa-test-action@wip_first_attempt
+      - name: Launch test
+        uses: bakpaul/sofa-test-action@26_09_fix_regression_testing
         with:
           sofa_root: ${{ github.workspace }}/sofa
           sofa_version: master
