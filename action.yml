@@ -73,7 +73,7 @@ runs:
   using: "composite"
   steps:
 
-    - name: Clone missing CI plugin 
+    - name: Clone missing CI plugin
       uses: actions/checkout@v4
       if: inputs.ci_dir == ''
       with:
@@ -81,7 +81,7 @@ runs:
         ref: 'master'
         path: ci
 
-    - name: Clone missing Regression plugin 
+    - name: Clone missing Regression plugin
       uses: actions/checkout@v4
       if: inputs.regression_dir == ''
       with:
@@ -139,14 +139,21 @@ runs:
         echo "OUTPUT_DIR=$OUTPUT_DIR" >> $GITHUB_ENV
         echo "OUTPUT_DIR_FOR_GTEST=$OUTPUT_DIR_FOR_GTEST" >> $GITHUB_ENV
         echo "SOFA_ROOT=$SOFA_ROOT" >> $GITHUB_ENV
-        
+
+
         ##Install Regression release
-        #mkdir -p "${{ runner.temp }}/regression_tmp"
-        #curl --output "${{ runner.temp }}/regression_tmp/${RUNNER_OS}.zip" -L https://github.com/sofa-framework/regression/releases/download/release-master/Regression_test_master_for-SOFA-${{ inputs.sofa_version }}_${RUNNER_OS}.zip
-        #unzip -qq "${{ runner.temp }}/regression_tmp/${RUNNER_OS}.zip" -d "$WORKSPACE_DIR"
-        #mv "$WORKSPACE_DIR/Regression_test_master_for-SOFA-${{ inputs.sofa_version }}_${RUNNER_OS}/bin/*" "$SOFA_ROOT/bin/"
+
+        if [ -z "$(find "$SOFA_ROOT/bin" -maxdepth 1 -name "Regression_*" -type f -print -quit)" ]; then
+          mkdir -p "${{ runner.temp }}/regression_tmp"
+          curl --output "${{ runner.temp }}/regression_tmp/${RUNNER_OS}.zip" -L https://github.com/sofa-framework/regression/releases/download/release-master/Regression_test_master_for-SOFA-${{ inputs.sofa_version }}_${RUNNER_OS}.zip
+          unzip -qq "${{ runner.temp }}/regression_tmp/${RUNNER_OS}.zip" -d "$WORKSPACE_DIR"
+          mv "$WORKSPACE_DIR/Regression_test_master_for-SOFA-${{ inputs.sofa_version }}_${RUNNER_OS}/bin/*" "$SOFA_ROOT/bin/"
+        fi
+
         chmod +x $SOFA_ROOT/bin/Regression_*
         echo "REGRESSION_BINARY_DIR=$SOFA_ROOT" >> $GITHUB_ENV
+
+
 
         if [[ "$RUNNER_OS" == "Windows" ]]; then
 
@@ -160,14 +167,14 @@ runs:
           echo "$pythonroot/Lib" >> $GITHUB_PATH
 
           if [[ -d "$BUILD_DIR/bin" ]]; then
-            echo "SOFA_PLUGIN_PATH=$BUILD_DIR/bin" | tee -a $GITHUB_ENV          
+            echo "SOFA_PLUGIN_PATH=$BUILD_DIR/bin" | tee -a $GITHUB_ENV
           else
             echo "SOFA_PLUGIN_PATH=$BUILD_DIR" | tee -a $GITHUB_ENV
           fi
           echo "$SOFA_ROOT/plugins/SofaPython3/bin" >> $GITHUB_PATH
         else
           if [[ -d "$BUILD_DIR/lib" ]]; then
-            echo "SOFA_PLUGIN_PATH=$BUILD_DIR/lib" | tee -a $GITHUB_ENV          
+            echo "SOFA_PLUGIN_PATH=$BUILD_DIR/lib" | tee -a $GITHUB_ENV
           else
             echo "SOFA_PLUGIN_PATH=$BUILD_DIR" | tee -a $GITHUB_ENV
           fi
@@ -193,7 +200,7 @@ runs:
 
         # Setup PYTHONPATH for SofaPython3 module
         SOFA_PYTHON_PATH="$SOFA_ROOT/plugins/SofaPython3/lib/python3/site-packages"
-        
+
         # Check if the path exists, if not try common alternatives
         if [[ ! -d "$SOFA_PYTHON_PATH" ]]; then
           # Try with specific Python versions
@@ -209,10 +216,10 @@ runs:
             if [[ "$RUNNER_OS" == "Windows" ]]; then
               SOFA_PYTHON_PATH="$SOFA_PYTHON_PATH;${{ inputs.python_path }}"
             else
-              SOFA_PYTHON_PATH="$SOFA_PYTHON_PATH:${{ inputs.python_path }}"            
+              SOFA_PYTHON_PATH="$SOFA_PYTHON_PATH:${{ inputs.python_path }}"
             fi
         fi
-        
+
          if [[ "$RUNNER_OS" == "Windows" ]]; then
            # On Windows, use semicolon as path separator instead of colon
            # Only add semicolon if PYTHONPATH is not empty
@@ -248,7 +255,7 @@ runs:
         echo "tests_failures=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-failures unit $BUILD_DIR $SRC_DIR $OUTPUT_DIR_FOR_GTEST)" >> $OUTPUT_DIR/unit-tests/unit-tests_results.txt
         echo "tests_errors=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-errors unit $BUILD_DIR $SRC_DIR $OUTPUT_DIR_FOR_GTEST)" >> $OUTPUT_DIR/unit-tests/unit-tests_results.txt
         echo "tests_duration=$duration" >> $OUTPUT_DIR/unit-tests/unit-tests_results.txt
-        
+
         python3 "$CI_DIR/scripts/exctractErrorFromXML.py" "$OUTPUT_DIR/unit-tests/reports" "$OUTPUT_DIR/unit-tests"
 
 
@@ -298,7 +305,7 @@ runs:
         echo "regressions_failures=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-failures regression $REGRESSION_BINARY_DIR $SRC_DIR $OUTPUT_DIR_FOR_GTEST )" >> $OUTPUT_DIR/regression-tests/regression-tests_results.txt
         echo "regressions_errors=$(/bin/bash "$CI_DIR/scripts/unit-tests.sh" count-errors regression $REGRESSION_BINARY_DIR $SRC_DIR $OUTPUT_DIR_FOR_GTEST )" >> $OUTPUT_DIR/regression-tests/regression-tests_results.txt
         echo "regressions_duration=$duration" >> $OUTPUT_DIR/regression-tests/regression-tests_results.txt
- 
+
         python3 "$CI_DIR/scripts/exctractErrorFromXML.py" "$OUTPUT_DIR/regression-tests/reports" "$OUTPUT_DIR/regression-tests"
 
 
@@ -324,10 +331,10 @@ runs:
           echo "#---------------Quick Logs---------------#"
           echo "#----------------------------------------#"
           for testType in 'unit' 'scene' 'regression';
-            do 
+            do
               for errorType in 'errors' 'crashes' 'failures';
               do
-                if [ -f "$OUTPUT_DIR/${testType}-tests_${errorType}" ]; then 
+                if [ -f "$OUTPUT_DIR/${testType}-tests_${errorType}" ]; then
                   capitalized="$(echo "${testType:0:1}" | tr '[:lower:]' '[:upper:]')${testType:1}"
                   echo ""
                   echo -e "${bold}${capitalized} ${errorType}:${normal}"
